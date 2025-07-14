@@ -1,4 +1,4 @@
-## 🌐 aenuka.com  
+## 🌐 www.aenuka.com  
 # 🚀 Full-Stack Web App Deployment with Netlify, Neon & Node.js
 
 **aenuka.com** is a full-stack web application originally built as a static site on GitHub Pages. It has since been upgraded with a backend using **Node.js + Express**, connected to a **Neon Serverless Postgres** database, and deployed on **Netlify** with a custom domain and HTTPS.
