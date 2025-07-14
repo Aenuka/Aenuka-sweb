@@ -1,0 +1,28 @@
+# Node modules
+node_modules/
+
+# dotenv file with sensitive keys
+.env
+src/functions/.env
+
+# Netlify CLI config
+.netlify/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# VSCode
+.vscode/
+
+# Mac system files
+.DS_Store
+
+# Build folders (if you build manually)
+dist/
+build/
+
+# Optional: IDE files
+.idea/
+*.iml
