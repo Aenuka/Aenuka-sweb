@@ -3,7 +3,7 @@
 
 **aenuka.com** is a full-stack web application originally built as a static site on GitHub Pages. It has since been upgraded with a backend using **Node.js + Express**, connected to a **Neon Serverless Postgres** database, and deployed on **Netlify** with a custom domain and HTTPS.
 
-🌐 Live Site: [**aenuka.com**](https://aenuka.com)  
+🌐 Live Site: [**aenuka.com**](https://www.aenuka.com)  
 🔒 **SSL Enabled** (HTTPS)  
 📬 **Contact form with backend & database integration**
 
