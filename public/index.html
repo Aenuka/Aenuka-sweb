@@ -38,10 +38,16 @@
     }
 
     #home {
-      background-image: url('bg.jpg');
+      background-image: url('bg-desktop.jpg');
       background-repeat: no-repeat;
       background-position: center center;
       background-size: cover;
+    }
+
+    @media (max-width: 768px) {
+      #home {
+        background-image: url('bg-mobile.jpg');
+      }
     }
   </style>
 </head>
@@ -65,7 +71,7 @@
 
   <!-- Home Section -->
   <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center text-white pt-20 px-4">
-    <img src="Wallpaper.png" alt="Profile" class="w-36 h-36 rounded-full shadow-lg mb-6 object-cover" />
+    <img src="Wallpaper-512.png" alt="Profile" class="w-36 h-36 rounded-full shadow-lg mb-6 object-cover" />
     <h2 class="text-4xl font-bold mb-2">Aenuka Buddhakorala</h2>
     <p class="text-lg max-w-xl"></p>
     <a href="#projects" class="mt-6 inline-block bg-primary text-white font-semibold py-2 px-6 rounded-full shadow hover:bg-secondary transition">
