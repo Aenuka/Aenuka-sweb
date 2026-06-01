@@ -1,7 +1,5 @@
 require('dotenv').config();
 
-const fs = require('fs');
-const path = require('path');
 const { neon } = require('@neondatabase/serverless');
 const nodemailer = require('nodemailer');
 
@@ -49,8 +47,7 @@ exports.handler = async function(event, context) {
     const mailUser = process.env.EMAIL_USER;
     const mailPass = process.env.EMAIL_PASS;
     const adminEmail = process.env.ADMIN_EMAIL;
-    const logoPath = path.join(__dirname, '../../public/Wallpaper-512.png');
-    const logoBuffer = fs.readFileSync(logoPath);
+    const logoUrl = 'https://www.aenuin.com/Wallpaper-512.png';
 
     let emailWarning = null;
 
@@ -74,7 +71,7 @@ exports.handler = async function(event, context) {
             <div style="font-family: Arial, sans-serif; background:#f9fafb; padding:24px; color:#111827;">
               <div style="max-width:640px; margin:0 auto; background:#ffffff; border:1px solid #f3f4f6; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
                 <div style="background:#fff; border-bottom:1px solid #fee2e2; padding:20px 24px; text-align:center;">
-                  <img src="cid:aenuka-logo" alt="Aenuka Buddhakorala" style="width:72px; height:72px; object-fit:cover; border-radius:12px; display:block; margin:0 auto 12px;" />
+                  <img src="${logoUrl}" alt="Aenuka Buddhakorala" style="width:72px; height:72px; object-fit:cover; border-radius:12px; display:block; margin:0 auto 12px;" />
                   <div style="font-size:18px; font-weight:700; color:#dc2626;">Aenuka Buddhakorala</div>
                   <div style="font-size:13px; color:#6b7280;">New contact message received</div>
                 </div>
@@ -99,13 +96,6 @@ exports.handler = async function(event, context) {
               </div>
             </div>
           `,
-          attachments: [
-            {
-              filename: 'Wallpaper-512.png',
-              content: logoBuffer,
-              cid: 'aenuka-logo'
-            }
-          ],
         });
       } catch (mailError) {
         console.error('Error sending email:', mailError);
