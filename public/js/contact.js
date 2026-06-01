@@ -2,6 +2,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("contact-form");
   const formStatus = document.getElementById("form-status");
   const submitBtn = form.querySelector('button[type="submit"]');
+  const navLinks = document.querySelectorAll("[data-nav-link]");
+
+  const setActiveLink = (activeLink) => {
+    navLinks.forEach((link) => {
+      link.classList.remove("text-primary", "font-semibold");
+      link.classList.add("text-gray-800");
+    });
+
+    activeLink.classList.add("text-primary", "font-semibold");
+    activeLink.classList.remove("text-gray-800");
+  };
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", () => setActiveLink(link));
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

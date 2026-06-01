@@ -4,8 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="Description" content="Aenuka Buddhakorala's Portfolio">
+  <title>Aenuin</title>
   <meta name="Keywords" content="Aenuka, Aenuka Buddhakorala, Programming, Web Development, HTML, Python, CSS, SQL, Java, PHP">
-  <link rel="shortcut icon" type="image/png" href="favicon.ico" />
+  <!-- Versioned favicons to bypass aggressive browser caching -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=2" />
+  <link rel="shortcut icon" type="image/png" href="favicon.png?v=2" />
+  <link rel="alternate" href="favicon.ico?v=2" />
+  <link rel="apple-touch-icon" href="favicon.png?v=2" />
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,8 +23,8 @@
       theme: {
         extend: {
           colors: {
-            primary: '#ff0000',
-            secondary: '#cc0000',
+            primary: '#dc2626',
+            secondary: '#991b1b',
           },
         }
       }
@@ -38,49 +43,68 @@
     }
 
     #home {
-      background-image: url('bg-desktop.jpg');
+      background-image: url('gradient-illuminated-neon-gaming-desk-setup-with-keyboard.jpg');
       background-repeat: no-repeat;
       background-position: center center;
       background-size: cover;
+      position: relative;
+    }
+
+    /* 10% dark tint overlay for better contrast */
+    #home::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.35); /* 35% black */
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Ensure home content appears above the overlay */
+    #home > * {
+      position: relative;
+      z-index: 2;
     }
 
     @media (max-width: 768px) {
       #home {
-        background-image: url('bg-mobile.jpg');
+        background-image: url('gradient-illuminated-neon-gaming-desk-setup-with-keyboard.jpg');
       }
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans relative">
+<body class="bg-white text-gray-800 font-sans relative">
 
 <!-- Navigation -->
-  <header class="fixed top-0 left-0 w-full bg-white shadow z-50">
+  <header class="fixed top-0 left-0 w-full bg-white text-gray-800 shadow-lg z-50 border-b border-red-100">
     <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-primary logo-bg">Aenuka Buddhakorala</h1>
+      <div class="flex items-center">
+        <a href="#home" class="flex items-center space-x-4">
+          <img src="Wallpaper-512.png" alt="Logo" class="w-16 h-16 rounded-none shadow-md object-cover" />
+          <span class="text-2xl font-bold text-primary">Aenuka Buddhakorala</span>
+        </a>
       </div>
-      <nav class="hidden md:flex space-x-6 font-medium">
-        <a href="#home" class="hover:text-primary transition">Home</a>
-        <a href="#about" class="hover:text-primary transition">About</a>
-        <a href="#skills" class="hover:text-primary transition">Skills</a>
-        <a href="#projects" class="hover:text-primary transition">Projects</a>
-        <a href="#contact" class="hover:text-primary transition">Contact</a>
+      <nav class="hidden md:flex space-x-6 font-medium text-gray-800">
+        <a href="#home" class="nav-link text-primary transition" data-nav-link>Home</a>
+        <a href="#about" class="nav-link hover:text-primary transition" data-nav-link>About</a>
+        <a href="#skills" class="nav-link hover:text-primary transition" data-nav-link>Skills</a>
+        <a href="#projects" class="nav-link hover:text-primary transition" data-nav-link>Projects</a>
+        <a href="#contact" class="nav-link hover:text-primary transition" data-nav-link>Contact</a>
       </nav>
     </div>
   </header>
 
   <!-- Home Section -->
-  <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center text-white pt-20 px-4">
-    <img src="Wallpaper-512.png" alt="Profile" class="w-36 h-36 rounded-full shadow-lg mb-6 object-cover" />
-    <h2 class="text-4xl font-bold mb-2">Aenuka Buddhakorala</h2>
+  <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center text-white pt-20 px-4 bg-gradient-to-r from-red-700 via-red-600 to-white">
+    <h2 class="text-4xl font-bold mb-2 drop-shadow">Aenuka Buddhakorala</h2>
     <p class="text-lg max-w-xl"></p>
-    <a href="#projects" class="mt-6 inline-block bg-primary text-white font-semibold py-2 px-6 rounded-full shadow hover:bg-secondary transition">
+    <a href="#projects" class="mt-6 inline-block bg-white text-primary font-semibold py-2 px-6 rounded-full shadow hover:bg-red-50 transition">
       See My Work
     </a>
   </section>
 
   <!-- About Section -->
-  <section id="about" class="py-20 px-6 bg-white">
+  <section id="about" class="py-20 px-6 bg-white border-t border-red-100 scroll-mt-24">
     <div class="max-w-4xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-6">About Me</h2>
       <p class="text-lg text-gray-700 mb-6">
@@ -92,13 +116,13 @@
       
       <!-- Social Icons -->
       <div class="flex justify-center space-x-8 text-gray-700">
-        <a href="https://github.com/Aenuka" target="_blank" class="hover:text-black transition">
+        <a href="https://github.com/Aenuka" target="_blank" class="hover:text-primary transition">
           <i class="devicon-github-original text-3xl"></i>
         </a>
-        <a href="https://lk.linkedin.com/in/aenuka" target="_blank" class="hover:text-blue-700 transition">
+        <a href="https://lk.linkedin.com/in/aenuka" target="_blank" class="hover:text-primary transition">
           <i class="devicon-linkedin-plain text-3xl"></i>
         </a>
-        <a href="https://www.instagram.com/aenuka_/" target="_blank" class="hover:text-pink-500 transition">
+        <a href="https://www.instagram.com/aenuka_/" target="_blank" class="hover:text-primary transition">
           <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M7.75 2h8.5A5.75 5.75 0 0122 7.75v8.5A5.75 5.75 0 0116.25 22h-8.5A5.75 5.75 0 012 16.25v-8.5A5.75 5.75 0 017.75 2zm0 1.5A4.25 4.25 0 003.5 7.75v8.5A4.25 4.25 0 007.75 20.5h8.5a4.25 4.25 0 004.25-4.25v-8.5A4.25 4.25 0 0016.25 3.5h-8.5zm8.75 3a1.25 1.25 0 110 2.5 1.25 1.25 0 010-2.5zM12 7a5 5 0 110 10 5 5 0 010-10zm0 1.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />
           </svg>
@@ -108,39 +132,39 @@
   </section>
 
   <!-- Skills Section -->
-  <section id="skills" class="py-20 px-6 bg-gray-50">
+  <section id="skills" class="py-20 px-6 bg-red-50 scroll-mt-24">
     <div class="max-w-5xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-10">Skills & Abilities</h2>
       <div class="flex flex-wrap justify-center gap-4 mb-8">
-        <span class="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded"><i class="devicon-javascript-plain"></i><span>JavaScript</span></span>
-        <span class="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded"><i class="devicon-java-plain"></i><span>Java</span></span>
-        <span class="flex items-center space-x-2 bg-teal-700 text-white px-4 py-2 rounded"><i class="devicon-spring-plain"></i><span>Spring Boot</span></span>
-        <span class="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded"><i class="devicon-python-plain"></i><span>Python</span></span>
-        <span class="flex items-center space-x-2 bg-cyan-700 text-white px-4 py-2 rounded"><i class="devicon-mysql-plain"></i><span>SQL</span></span>
-        <span class="flex items-center space-x-2 bg-sky-600 text-white px-4 py-2 rounded"><i class="devicon-react-original"></i><span>React</span></span>
-        <span class="flex items-center space-x-2 bg-green-700 text-white px-4 py-2 rounded"><i class="devicon-nodejs-plain"></i><span>Node.js</span></span>
-        <span class="flex items-center space-x-2 bg-zinc-700 text-white px-4 py-2 rounded"><i class="devicon-express-original"></i><span>Express.js</span></span>
-        <span class="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded"><i class="devicon-html5-plain"></i><span>HTML</span></span>
-        <span class="flex items-center space-x-2 bg-blue-700 text-white px-4 py-2 rounded"><i class="devicon-css3-plain"></i><span>CSS</span></span>
-        <span class="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded"><i class="devicon-mongodb-plain"></i><span>MongoDB</span></span>
-        <span class="flex items-center space-x-2 bg-gray-800 text-white px-4 py-2 rounded"><i class="devicon-github-original"></i><span>GitHub</span></span>
-        <span class="flex items-center space-x-2 bg-blue-800 text-white px-4 py-2 rounded"><i class="devicon-docker-plain"></i><span>Docker & Kubernetes</span></span>
-        <span class="bg-indigo-700 text-white px-4 py-2 rounded">Jira</span>
-        <span class="flex items-center space-x-2 bg-pink-600 text-white px-4 py-2 rounded"><i class="devicon-figma-plain"></i><span>Figma</span></span>
-        <span class="bg-emerald-700 text-white px-4 py-2 rounded">Cypress</span>
-        <span class="bg-orange-600 text-white px-4 py-2 rounded">Microsoft Word</span>
-        <span class="bg-orange-600 text-white px-4 py-2 rounded">Microsoft PowerPoint</span>
-        <span class="bg-orange-600 text-white px-4 py-2 rounded">Microsoft Excel</span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-javascript-plain"></i><span>JavaScript</span></span>
+        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-java-plain"></i><span>Java</span></span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-spring-plain"></i><span>Spring Boot</span></span>
+        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-python-plain"></i><span>Python</span></span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-mysql-plain"></i><span>SQL</span></span>
+        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-react-original"></i><span>React</span></span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-nodejs-plain"></i><span>Node.js</span></span>
+        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-express-original"></i><span>Express.js</span></span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-html5-plain"></i><span>HTML</span></span>
+        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-css3-plain"></i><span>CSS</span></span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-mongodb-plain"></i><span>MongoDB</span></span>
+        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-github-original"></i><span>GitHub</span></span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-docker-plain"></i><span>Docker & Kubernetes</span></span>
+        <span class="bg-white text-primary border border-primary px-4 py-2 rounded">Jira</span>
+        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-figma-plain"></i><span>Figma</span></span>
+        <span class="bg-white text-primary border border-primary px-4 py-2 rounded">Cypress</span>
+        <span class="bg-primary text-white px-4 py-2 rounded">Microsoft Word</span>
+        <span class="bg-white text-primary border border-primary px-4 py-2 rounded">Microsoft PowerPoint</span>
+        <span class="bg-primary text-white px-4 py-2 rounded">Microsoft Excel</span>
       </div>
     </div>
   </section>
 
   <!-- Projects Section -->
-  <section id="projects" class="py-20 px-6 bg-white">
+  <section id="projects" class="py-20 px-6 bg-white border-t border-red-100 scroll-mt-24">
     <div class="max-w-5xl mx-auto">
       <h2 class="text-3xl font-bold text-center text-primary mb-10">Projects</h2>
       <div class="grid md:grid-cols-2 gap-8">
-        <article class="bg-gray-100 p-6 rounded-lg shadow hover:shadow-lg transition">
+        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
           <h3 class="text-xl font-semibold mb-2">Quizora - Online Exam Management System (SPM Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Group Lead - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -152,7 +176,7 @@
           <a href="https://github.com/Aenuka/Quizora" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-gray-100 p-6 rounded-lg shadow hover:shadow-lg transition">
+        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
           <h3 class="text-xl font-semibold mb-2">Healthcare Microservices Platform (Distributed Systems Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Group Lead - Ongoing Project</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -162,7 +186,7 @@
           <a href="https://github.com/Aenuka/SLIIT-SE3020-SE-120-Healthcare-Microservices-Platform" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-gray-100 p-6 rounded-lg shadow hover:shadow-lg transition">
+        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
           <h3 class="text-xl font-semibold mb-2">Cey Harvest System - Semi-Finalist, AIESEC IDEALIZE 2025</h3>
           <p class="text-sm font-medium text-primary mb-3">Member - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -173,7 +197,7 @@
           <a href="https://github.com/damithch/CeyHarvest" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-gray-100 p-6 rounded-lg shadow hover:shadow-lg transition">
+        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
           <h3 class="text-xl font-semibold mb-2">Inventory Management System - Animal Hospital (ITP Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Member - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -184,7 +208,7 @@
           <a href="https://github.com/kaveeshapasan2002/City_Pet_AHMS" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-gray-100 p-6 rounded-lg shadow hover:shadow-lg transition md:col-span-2">
+        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100 md:col-span-2">
           <h3 class="text-xl font-semibold mb-2">Cypress Automation Testing Project (AF Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Group Lead - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -201,14 +225,14 @@
   </section>
 
   <!-- Contact Section -->
-  <section id="contact" class="py-20 px-6 bg-gray-50">
+  <section id="contact" class="py-20 px-6 bg-red-50 border-t border-red-100 scroll-mt-24">
     <div class="max-w-xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-6">Contact Me</h2>
       <p class="text-sm text-gray-600 mb-6">Backend is live and this contact form is fully functional. You are welcome to submit a message.</p>
       <form id="contact-form" class="space-y-4 text-left">
-        <input type="text" name="name" placeholder="Your Name" required class="w-full border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-primary" />
-        <input type="email" name="email" placeholder="Your Email" required class="w-full border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-primary" />
-        <textarea name="message" placeholder="Your Message" rows="4" required class="w-full border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+        <input type="text" name="name" placeholder="Your Name" required class="w-full border border-red-200 p-3 rounded focus:outline-none focus:ring-2 focus:ring-primary bg-white" />
+        <input type="email" name="email" placeholder="Your Email" required class="w-full border border-red-200 p-3 rounded focus:outline-none focus:ring-2 focus:ring-primary bg-white" />
+        <textarea name="message" placeholder="Your Message" rows="4" required class="w-full border border-red-200 p-3 rounded focus:outline-none focus:ring-2 focus:ring-primary bg-white"></textarea>
         <button type="submit" class="bg-primary text-white px-6 py-3 rounded hover:bg-secondary transition">
           Send Message
         </button>
