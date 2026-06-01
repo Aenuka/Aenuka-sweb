@@ -100,7 +100,9 @@
     .nav-link.active {
       color: var(--primary) !important;
       font-weight: 700;
-      box-shadow: inset 0 -2px 0 var(--primary);
+      /* no underline or decorative box-shadow - keep text-only */
+      box-shadow: none !important;
+      text-decoration: none;
     }
 
     /* Buttons & cards */
