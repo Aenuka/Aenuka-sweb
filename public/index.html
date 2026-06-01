@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="Description" content="Aenuka Buddhakorala's Portfolio">
-  <title>Aenuin</title>
+  <title>Aenuka Buddhakorala</title>
   <meta name="Keywords" content="Aenuka, Aenuka Buddhakorala, Programming, Web Development, HTML, Python, CSS, SQL, Java, PHP">
   <!-- Versioned favicons to bypass aggressive browser caching -->
   <link rel="icon" type="image/x-icon" href="favicon.ico?v=2" />
@@ -15,6 +15,9 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Google Font: Inter for a modern UI -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
   <!-- Devicon (Tech Icons) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
 
@@ -23,21 +26,29 @@
       theme: {
         extend: {
           colors: {
-            primary: '#dc2626',
-            secondary: '#991b1b',
+            primary: '#ff0000',
+            secondary: '#cc0000',
+            muted: '#6b7280'
           },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui']
+          }
         }
       }
     }
   </script>
 
   <style>
+    :root{
+      --primary: #ff0000;
+      --primary-05: rgba(255,0,0,0.05);
+      --primary-10: rgba(255,0,0,0.10);
+      --muted: #6b7280;
+    }
+
+    html,body{font-family:Inter, ui-sans-serif, system-ui;}
+
     header .logo-bg {
-      background-image: url('logo-bg.png');
-      background-repeat: no-repeat;
-      background-position: left center;
-      background-size: 40px 40px;
-      padding-left: 50px;
       display: inline-block;
       vertical-align: middle;
     }
@@ -50,12 +61,13 @@
       position: relative;
     }
 
-    /* 10% dark tint overlay for better contrast */
+    /* Subtle warm tint overlay for brand consistency (keeps readability) */
     #home::before {
       content: "";
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.35); /* 35% black */
+      background: var(--primary-10); /* subtle red tint */
+      backdrop-filter: blur(2px);
       z-index: 1;
       pointer-events: none;
     }
@@ -71,6 +83,38 @@
         background-image: url('gradient-illuminated-neon-gaming-desk-setup-with-keyboard.jpg');
       }
     }
+
+    /* Nav link resets for a modern, clean look */
+    .nav-link{
+      text-decoration: none;
+      color: inherit;
+      padding: 0.25rem 0.35rem;
+      border-radius: 0.375rem;
+    }
+
+    .nav-link:hover{
+      color: var(--primary);
+      background: var(--primary-05);
+    }
+
+    .nav-link.active {
+      color: var(--primary) !important;
+      font-weight: 700;
+      box-shadow: inset 0 -2px 0 var(--primary);
+    }
+
+    /* Buttons & cards */
+    .card { background: white; border-radius: 0.75rem; box-shadow: 0 6px 18px rgba(15,23,42,0.06); }
+    .muted { color: var(--muted); }
+
+    /* Make logo square and slightly larger on desktop */
+    header img.logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 0;
+      object-fit: cover;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.08);
+    }
   </style>
 </head>
 <body class="bg-white text-gray-800 font-sans relative">
@@ -80,25 +124,27 @@
     <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center">
         <a href="#home" class="flex items-center space-x-4">
-          <img src="Wallpaper-512.png" alt="Logo" class="w-16 h-16 rounded-none shadow-md object-cover" />
-          <span class="text-2xl font-bold text-primary">Aenuka Buddhakorala</span>
+          <img src="Wallpaper-512.png" alt="Logo" class="logo" />
+          <div class="leading-tight">
+            <span class="text-2xl font-extrabold text-gray-800">Aenuka Buddhakorala</span>
+            <div class="text-sm muted">Software Engineer</div>
+          </div>
         </a>
       </div>
       <nav class="hidden md:flex space-x-6 font-medium text-gray-800">
-        <a href="#home" class="nav-link text-primary transition" data-nav-link>Home</a>
-        <a href="#about" class="nav-link hover:text-primary transition" data-nav-link>About</a>
-        <a href="#skills" class="nav-link hover:text-primary transition" data-nav-link>Skills</a>
-        <a href="#projects" class="nav-link hover:text-primary transition" data-nav-link>Projects</a>
-        <a href="#contact" class="nav-link hover:text-primary transition" data-nav-link>Contact</a>
+        <a href="#home" class="nav-link active transition" data-nav-link>Home</a>
+        <a href="#about" class="nav-link transition" data-nav-link>About</a>
+        <a href="#skills" class="nav-link transition" data-nav-link>Skills</a>
+        <a href="#projects" class="nav-link transition" data-nav-link>Projects</a>
+        <a href="#contact" class="nav-link transition" data-nav-link>Contact</a>
       </nav>
     </div>
   </header>
 
   <!-- Home Section -->
-  <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center text-white pt-20 px-4 bg-gradient-to-r from-red-700 via-red-600 to-white">
-    <h2 class="text-4xl font-bold mb-2 drop-shadow">Aenuka Buddhakorala</h2>
-    <p class="text-lg max-w-xl"></p>
-    <a href="#projects" class="mt-6 inline-block bg-white text-primary font-semibold py-2 px-6 rounded-full shadow hover:bg-red-50 transition">
+  <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center text-white pt-28 px-4">
+    <h2 class="text-4xl md:text-5xl font-extrabold mb-2 drop-shadow">Aenuka Buddhakorala</h2>
+    <a href="#projects" class="mt-6 inline-block bg-primary text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:opacity-95 transition">
       See My Work
     </a>
   </section>
@@ -107,7 +153,7 @@
   <section id="about" class="py-20 px-6 bg-white border-t border-red-100 scroll-mt-24">
     <div class="max-w-4xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-6">About Me</h2>
-      <p class="text-lg text-gray-700 mb-6">
+      <p class="text-lg text-primary mb-6">
         Software Engineering undergraduate at SLIIT with a passion for backend, frontend, and
         mobile app development. Self-motivated learner eager to gain hands-on experience.
         Thrives in teamwork environments, effectively handling pressure situations. Enjoys
@@ -132,39 +178,39 @@
   </section>
 
   <!-- Skills Section -->
-  <section id="skills" class="py-20 px-6 bg-red-50 scroll-mt-24">
+  <section id="skills" class="py-20 px-6 bg-gray-50 scroll-mt-24">
     <div class="max-w-5xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-10">Skills & Abilities</h2>
       <div class="flex flex-wrap justify-center gap-4 mb-8">
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-javascript-plain"></i><span>JavaScript</span></span>
-        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-java-plain"></i><span>Java</span></span>
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-spring-plain"></i><span>Spring Boot</span></span>
-        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-python-plain"></i><span>Python</span></span>
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-mysql-plain"></i><span>SQL</span></span>
-        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-react-original"></i><span>React</span></span>
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-nodejs-plain"></i><span>Node.js</span></span>
-        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-express-original"></i><span>Express.js</span></span>
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-html5-plain"></i><span>HTML</span></span>
-        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-css3-plain"></i><span>CSS</span></span>
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-mongodb-plain"></i><span>MongoDB</span></span>
-        <span class="flex items-center space-x-2 bg-white text-primary border border-primary px-4 py-2 rounded"><i class="devicon-github-original"></i><span>GitHub</span></span>
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-docker-plain"></i><span>Docker & Kubernetes</span></span>
-        <span class="bg-white text-primary border border-primary px-4 py-2 rounded">Jira</span>
-        <span class="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded"><i class="devicon-figma-plain"></i><span>Figma</span></span>
-        <span class="bg-white text-primary border border-primary px-4 py-2 rounded">Cypress</span>
-        <span class="bg-primary text-white px-4 py-2 rounded">Microsoft Word</span>
-        <span class="bg-white text-primary border border-primary px-4 py-2 rounded">Microsoft PowerPoint</span>
-        <span class="bg-primary text-white px-4 py-2 rounded">Microsoft Excel</span>
+        <span class="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded"><i class="devicon-javascript-plain"></i><span>JavaScript</span></span>
+        <span class="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded"><i class="devicon-java-plain"></i><span>Java</span></span>
+        <span class="flex items-center space-x-2 bg-teal-700 text-white px-4 py-2 rounded"><i class="devicon-spring-plain"></i><span>Spring Boot</span></span>
+        <span class="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded"><i class="devicon-python-plain"></i><span>Python</span></span>
+        <span class="flex items-center space-x-2 bg-cyan-700 text-white px-4 py-2 rounded"><i class="devicon-mysql-plain"></i><span>SQL</span></span>
+        <span class="flex items-center space-x-2 bg-sky-600 text-white px-4 py-2 rounded"><i class="devicon-react-original"></i><span>React</span></span>
+        <span class="flex items-center space-x-2 bg-green-700 text-white px-4 py-2 rounded"><i class="devicon-nodejs-plain"></i><span>Node.js</span></span>
+        <span class="flex items-center space-x-2 bg-zinc-700 text-white px-4 py-2 rounded"><i class="devicon-express-original"></i><span>Express.js</span></span>
+        <span class="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded"><i class="devicon-html5-plain"></i><span>HTML</span></span>
+        <span class="flex items-center space-x-2 bg-blue-700 text-white px-4 py-2 rounded"><i class="devicon-css3-plain"></i><span>CSS</span></span>
+        <span class="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded"><i class="devicon-mongodb-plain"></i><span>MongoDB</span></span>
+        <span class="flex items-center space-x-2 bg-gray-800 text-white px-4 py-2 rounded"><i class="devicon-github-original"></i><span>GitHub</span></span>
+        <span class="flex items-center space-x-2 bg-blue-800 text-white px-4 py-2 rounded"><i class="devicon-docker-plain"></i><span>Docker & Kubernetes</span></span>
+        <span class="bg-indigo-700 text-white px-4 py-2 rounded">Jira</span>
+        <span class="flex items-center space-x-2 bg-pink-600 text-white px-4 py-2 rounded"><i class="devicon-figma-plain"></i><span>Figma</span></span>
+        <span class="bg-emerald-700 text-white px-4 py-2 rounded">Cypress</span>
+        <span class="bg-orange-600 text-white px-4 py-2 rounded">Microsoft Word</span>
+        <span class="bg-orange-600 text-white px-4 py-2 rounded">Microsoft PowerPoint</span>
+        <span class="bg-orange-600 text-white px-4 py-2 rounded">Microsoft Excel</span>
       </div>
     </div>
   </section>
 
   <!-- Projects Section -->
-  <section id="projects" class="py-20 px-6 bg-white border-t border-red-100 scroll-mt-24">
+  <section id="projects" class="py-20 px-6 bg-white border-t border-gray-100 scroll-mt-24">
     <div class="max-w-5xl mx-auto">
       <h2 class="text-3xl font-bold text-center text-primary mb-10">Projects</h2>
       <div class="grid md:grid-cols-2 gap-8">
-        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
+        <article class="card p-6 transition border border-gray-100">
           <h3 class="text-xl font-semibold mb-2">Quizora - Online Exam Management System (SPM Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Group Lead - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -173,20 +219,20 @@
             <li>Applied Agile methodologies, Scrum, and Jira for project management.</li>
             <li>Conducted industry interviews with professionals from Arimac Lanka Pvt Ltd.</li>
           </ul>
-          <a href="https://github.com/Aenuka/Quizora" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
+          <a href="https://github.com/Aenuka/Quizora" target="_blank" rel="noopener noreferrer" class="inline-block text-gray-800 font-semibold hover:text-primary hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
+        <article class="card p-6 transition border border-gray-100">
           <h3 class="text-xl font-semibold mb-2">Healthcare Microservices Platform (Distributed Systems Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Group Lead - Ongoing Project</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
             <li>Designing a scalable Spring Boot microservices architecture for a healthcare system.</li>
             <li>Implementing reliability, durability, and AI-based suggestion features.</li>
           </ul>
-          <a href="https://github.com/Aenuka/SLIIT-SE3020-SE-120-Healthcare-Microservices-Platform" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
+          <a href="https://github.com/Aenuka/SLIIT-SE3020-SE-120-Healthcare-Microservices-Platform" target="_blank" rel="noopener noreferrer" class="inline-block text-gray-800 font-semibold hover:text-primary hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
+        <article class="card p-6 transition border border-gray-100">
           <h3 class="text-xl font-semibold mb-2">Cey Harvest System - Semi-Finalist, AIESEC IDEALIZE 2025</h3>
           <p class="text-sm font-medium text-primary mb-3">Member - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -194,10 +240,10 @@
             <li>Developed using Spring Boot in a team environment.</li>
             <li>Collaborated under group repository management.</li>
           </ul>
-          <a href="https://github.com/damithch/CeyHarvest" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
+          <a href="https://github.com/damithch/CeyHarvest" target="_blank" rel="noopener noreferrer" class="inline-block text-gray-800 font-semibold hover:text-primary hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100">
+        <article class="card p-6 transition border border-gray-100">
           <h3 class="text-xl font-semibold mb-2">Inventory Management System - Animal Hospital (ITP Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Member - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -205,10 +251,10 @@
             <li>Implemented automated reordering and supplier notification features.</li>
             <li>Used MVC architecture and GitHub for team collaboration.</li>
           </ul>
-          <a href="https://github.com/kaveeshapasan2002/City_Pet_AHMS" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
+          <a href="https://github.com/kaveeshapasan2002/City_Pet_AHMS" target="_blank" rel="noopener noreferrer" class="inline-block text-gray-800 font-semibold hover:text-primary hover:underline">View on GitHub</a>
         </article>
 
-        <article class="bg-red-50 p-6 rounded-lg shadow hover:shadow-lg transition border border-red-100 md:col-span-2">
+        <article class="card p-6 transition border border-gray-100 md:col-span-2">
           <h3 class="text-xl font-semibold mb-2">Cypress Automation Testing Project (AF Module)</h3>
           <p class="text-sm font-medium text-primary mb-3">Group Lead - Present</p>
           <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
@@ -218,14 +264,14 @@
             <li>Implemented API mocking and stubbing techniques.</li>
             <li>Collaborated using QA best practices.</li>
           </ul>
-          <a href="https://github.com/Aenuka/CypressTestRepo" target="_blank" rel="noopener noreferrer" class="inline-block text-primary font-semibold hover:underline">View on GitHub</a>
+          <a href="https://github.com/Aenuka/CypressTestRepo" target="_blank" rel="noopener noreferrer" class="inline-block text-gray-800 font-semibold hover:text-primary hover:underline">View on GitHub</a>
         </article>
       </div>
     </div>
   </section>
 
   <!-- Contact Section -->
-  <section id="contact" class="py-20 px-6 bg-red-50 border-t border-red-100 scroll-mt-24">
+  <section id="contact" class="py-20 px-6 bg-gray-50 border-t border-gray-100 scroll-mt-24">
     <div class="max-w-xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-6">Contact Me</h2>
       <p class="text-sm text-gray-600 mb-6">Backend is live and this contact form is fully functional. You are welcome to submit a message.</p>

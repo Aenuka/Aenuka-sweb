@@ -6,12 +6,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const setActiveLink = (activeLink) => {
     navLinks.forEach((link) => {
-      link.classList.remove("text-primary", "font-semibold");
-      link.classList.add("text-gray-800");
+      link.classList.remove("active");
     });
 
-    activeLink.classList.add("text-primary", "font-semibold");
-    activeLink.classList.remove("text-gray-800");
+    activeLink.classList.add("active");
   };
 
   navLinks.forEach((link) => {
