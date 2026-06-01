@@ -47,6 +47,8 @@ exports.handler = async function(event, context) {
     const mailUser = process.env.EMAIL_USER;
     const mailPass = process.env.EMAIL_PASS;
     const adminEmail = process.env.ADMIN_EMAIL;
+    const siteUrl = process.env.SITE_URL || 'https://www.aenuka.com';
+    const logoUrl = `${siteUrl.replace(/\/$/, '')}/Wallpaper-512.png`;
 
     let emailWarning = null;
 
@@ -63,8 +65,38 @@ exports.handler = async function(event, context) {
         await transporter.sendMail({
           from: mailUser,
           to: adminEmail,
-          subject: `New Contact Form Submission from ${name}`,
-          text: `You received a new message from your contact form:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`,
+          replyTo: email,
+          subject: `New message for ${adminEmail} from ${name}`,
+          text: `To: ${adminEmail}\nFrom: ${name} <${email}>\n\nMessage:\n${message}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; background:#f9fafb; padding:24px; color:#111827;">
+              <div style="max-width:640px; margin:0 auto; background:#ffffff; border:1px solid #f3f4f6; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+                <div style="background:#fff; border-bottom:1px solid #fee2e2; padding:20px 24px; text-align:center;">
+                  <img src="${logoUrl}" alt="Aenuka Buddhakorala" style="width:72px; height:72px; object-fit:cover; border-radius:12px; display:block; margin:0 auto 12px;" />
+                  <div style="font-size:18px; font-weight:700; color:#dc2626;">Aenuka Buddhakorala</div>
+                  <div style="font-size:13px; color:#6b7280;">New contact message received</div>
+                </div>
+
+                <div style="padding:24px;">
+                  <div style="margin-bottom:16px; padding:14px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:12px;">
+                    <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:#b91c1c; font-weight:700; margin-bottom:6px;">Recipient</div>
+                    <div style="font-size:15px; color:#111827; font-weight:600;">${adminEmail}</div>
+                  </div>
+
+                  <div style="margin-bottom:14px;">
+                    <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:#6b7280; font-weight:700;">From</div>
+                    <div style="font-size:15px; font-weight:600; color:#111827;">${name}</div>
+                    <div style="font-size:14px; color:#374151;">${email}</div>
+                  </div>
+
+                  <div style="margin-bottom:12px;">
+                    <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:#6b7280; font-weight:700; margin-bottom:8px;">Message</div>
+                    <div style="font-size:15px; line-height:1.7; color:#111827; white-space:pre-wrap; background:#fafafa; border:1px solid #e5e7eb; border-radius:12px; padding:16px;">${message}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `,
         });
       } catch (mailError) {
         console.error('Error sending email:', mailError);
