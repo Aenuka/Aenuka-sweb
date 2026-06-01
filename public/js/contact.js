@@ -51,14 +51,24 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(data)
       });
 
+      const responseBody = await response.text();
+      let parsedBody = null;
+
+      try {
+        parsedBody = responseBody ? JSON.parse(responseBody) : null;
+      } catch {
+        parsedBody = null;
+      }
+
       if (response.ok) {
         form.reset();
-        formStatus.textContent = "Message sent successfully!";
+        formStatus.textContent = parsedBody?.warning
+          ? `Message sent successfully! ${parsedBody.warning}`
+          : "Message sent successfully!";
         formStatus.classList.remove("hidden", "text-red-600");
         formStatus.classList.add("text-green-600");
       } else {
-        const errorBody = await response.text();
-        formStatus.textContent = errorBody || "Failed to send message. Please try again later.";
+        formStatus.textContent = parsedBody?.error || responseBody || "Failed to send message. Please try again later.";
         formStatus.classList.remove("hidden", "text-green-600");
         formStatus.classList.add("text-red-600");
       }

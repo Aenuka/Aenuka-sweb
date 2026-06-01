@@ -1,4 +1,7 @@
+require('dotenv').config();
+
 const { neon } = require('@neondatabase/serverless');
+const nodemailer = require('nodemailer');
 
 exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
@@ -41,10 +44,43 @@ exports.handler = async function(event, context) {
       VALUES (${name}, ${email}, ${message})
     `;
 
+    const mailUser = process.env.EMAIL_USER;
+    const mailPass = process.env.EMAIL_PASS;
+    const adminEmail = process.env.ADMIN_EMAIL;
+
+    let emailWarning = null;
+
+    if (mailUser && mailPass && adminEmail) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: mailUser,
+          pass: mailPass,
+        },
+      });
+
+      try {
+        await transporter.sendMail({
+          from: mailUser,
+          to: adminEmail,
+          subject: `New Contact Form Submission from ${name}`,
+          text: `You received a new message from your contact form:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`,
+        });
+      } catch (mailError) {
+        console.error('Error sending email:', mailError);
+        emailWarning = mailError.message || 'Email could not be sent';
+      }
+    } else {
+      emailWarning = 'Email settings are not configured';
+    }
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Message sent successfully!' })
+      body: JSON.stringify({
+        message: 'Message sent successfully!',
+        warning: emailWarning,
+      })
     };
 
   } catch (error) {
