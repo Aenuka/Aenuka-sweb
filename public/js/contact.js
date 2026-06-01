@@ -57,7 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
         formStatus.classList.remove("hidden", "text-red-600");
         formStatus.classList.add("text-green-600");
       } else {
-        formStatus.textContent = "Failed to send message. Please try again later.";
+        const errorBody = await response.text();
+        formStatus.textContent = errorBody || "Failed to send message. Please try again later.";
         formStatus.classList.remove("hidden", "text-green-600");
         formStatus.classList.add("text-red-600");
       }

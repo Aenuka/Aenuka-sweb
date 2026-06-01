@@ -1,7 +1,4 @@
-require('dotenv').config({ path: './src/.env' });  // Load .env automatically, place .env at your project root or backend folder
-
-const { Client } = require('pg');
-const nodemailer = require('nodemailer');
+const { neon } = require('@neondatabase/serverless');
 
 exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
@@ -20,49 +17,33 @@ exports.handler = async function(event, context) {
     return { statusCode: 400, body: 'Missing required fields' };
   }
 
-  // Debug: print DB connection string to verify correct loading
-  console.log("Using DB URL:", process.env.NEON_DB_URL);
+  const connectionString = process.env.NEON_DB_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
-  const client = new Client({
-    connectionString: process.env.NEON_DB_URL,
-    ssl: { rejectUnauthorized: false }
-  });
+  if (!connectionString) {
+    return { statusCode: 500, body: 'Database connection string is not configured' };
+  }
+
+  const sql = neon(connectionString);
 
   try {
-    // Connect to the database
-    await client.connect();
+    await sql`
+      CREATE TABLE IF NOT EXISTS contact_messages (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
 
-    // Insert the form data into the contact_messages table
-    await client.query(
-      'INSERT INTO contact_messages (name, email, message) VALUES ($1, $2, $3)',
-      [name, email, message]
-    );
+    await sql`
+      INSERT INTO contact_messages (name, email, message)
+      VALUES (${name}, ${email}, ${message})
+    `;
 
-    // Prepare nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    // Email content
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
-      subject: `New Contact Form Submission from ${name}`,
-      text: `You received a new message from your contact form:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`
-    };
-
-    // Send email to admin
-    await transporter.sendMail(mailOptions);
-
-    await client.end();
-
-    // Success response
     return {
       statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Message sent successfully!' })
     };
 
@@ -70,7 +51,8 @@ exports.handler = async function(event, context) {
     console.error("Error in handler:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Server error occurred' })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: error.message || 'Server error occurred' })
     };
   }
 };
