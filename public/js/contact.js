@@ -1,4 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+
+  if (window.location.hash) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+
+  window.scrollTo(0, 0);
+
   const form = document.getElementById("contact-form");
   const formStatus = document.getElementById("form-status");
   const submitBtn = form.querySelector('button[type="submit"]');
