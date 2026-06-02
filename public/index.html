@@ -46,6 +46,10 @@
       --muted: #6b7280;
     }
 
+    html {
+      scroll-padding-top: 4rem;
+    }
+
     html,body{font-family:Inter, ui-sans-serif, system-ui;}
 
     header .logo-bg {
@@ -108,6 +112,16 @@
     .card { background: white; border-radius: 0.75rem; box-shadow: 0 6px 18px rgba(15,23,42,0.06); }
     .muted { color: var(--muted); }
 
+    .journey-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,248,248,0.96) 100%);
+      border: 1px solid rgba(255,0,0,0.08);
+      box-shadow: 0 12px 30px rgba(15,23,42,0.06);
+    }
+
+    .timeline-line {
+      background: linear-gradient(180deg, rgba(255,0,0,0.35), rgba(255,0,0,0.05));
+    }
+
     /* Make logo square and slightly larger on desktop */
     header img.logo {
       width: 80px;
@@ -151,18 +165,102 @@
   </section>
 
   <!-- About Section -->
-  <section id="about" class="py-20 px-6 bg-white border-t border-red-100 scroll-mt-24">
-    <div class="max-w-4xl mx-auto text-center">
-      <h2 class="text-3xl font-bold text-primary mb-6">About Me</h2>
-      <p class="text-lg text-primary mb-6">
-        Software Engineering undergraduate at SLIIT with a passion for backend, frontend, and
-        mobile app development. Self-motivated learner eager to gain hands-on experience.
-        Thrives in teamwork environments, effectively handling pressure situations. Enjoys
-        mentoring and is committed to continuous growth in the tech field.
-      </p>
-      
+  <section id="about" class="py-20 px-6 bg-white border-t border-red-100 scroll-mt-16">
+    <div class="max-w-6xl mx-auto">
+      <div class="max-w-3xl mx-auto text-center mb-12">
+        <span class="inline-flex items-center px-4 py-2 rounded-full bg-primary-05 text-primary text-sm font-semibold tracking-wide mb-4">About Me</span>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">A builder with a clear learning path</h2>
+        <p class="text-lg text-gray-600">
+          I started with curiosity, kept going through every stage of study, and turned that interest into a focused path in software engineering.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-8 items-start">
+        <article class="journey-card rounded-3xl p-8 md:p-10">
+          <div class="flex flex-wrap gap-3 mb-6">
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-white text-primary text-sm font-semibold border border-red-100">Software Engineering Undergraduate</span>
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-white text-gray-700 text-sm font-semibold border border-gray-200">SLIIT</span>
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-white text-gray-700 text-sm font-semibold border border-gray-200">3rd Year Student</span>
+          </div>
+
+          <div class="space-y-4 text-gray-700 leading-relaxed text-left">
+            <p>
+              After finishing my O/L exams, I spent my vacation watching HTML tutorials in Chanux Academy and related content from Chanux Bro. That was the point where I realized web development was fun, especially building small web apps and seeing ideas come to life.
+            </p>
+            <p>
+              After that, I enrolled in a Certificate Course in Computer Science at NIBM and an Advanced English course at the same time, each lasting 6 months. It helped me build both technical confidence and communication skills.
+            </p>
+            <p>
+              Then I started my A/L studies and took ICT as a subject from 2020 to 2023. After completing my A/L in January 2023, I joined SLIIT for a BSc (Hons) in Information Technology Specializing in Software Engineering. I am now a 3rd year, 2nd semester student and starting my 4th year.
+            </p>
+          </div>
+
+          <div class="mt-8 grid sm:grid-cols-3 gap-4">
+            <div class="rounded-2xl bg-white border border-gray-100 p-4">
+              <p class="text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Focus</p>
+              <p class="text-sm font-semibold text-gray-900">Frontend, backend, and mobile app development</p>
+            </div>
+            <div class="rounded-2xl bg-white border border-gray-100 p-4">
+              <p class="text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Style</p>
+              <p class="text-sm font-semibold text-gray-900">Self-motivated, team-oriented, and growth-driven</p>
+            </div>
+            <div class="rounded-2xl bg-white border border-gray-100 p-4">
+              <p class="text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Goal</p>
+              <p class="text-sm font-semibold text-gray-900">Build useful products and keep learning every day</p>
+            </div>
+          </div>
+        </article>
+
+        <aside class="journey-card rounded-3xl p-8 md:p-10">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h3 class="text-2xl font-bold text-gray-900">Development Roadmap</h3>
+              <p class="text-sm text-gray-500 mt-1">How my journey started and where it is going</p>
+            </div>
+            <div class="h-14 w-14 rounded-2xl bg-primary-05 text-primary flex items-center justify-center font-black text-xl">01</div>
+          </div>
+
+          <div class="space-y-6 relative pl-6">
+            <div class="absolute left-2 top-2 bottom-2 w-px timeline-line"></div>
+
+            <div class="relative">
+              <span class="absolute -left-6 top-1.5 h-4 w-4 rounded-full bg-primary ring-4 ring-primary-05"></span>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-2">2019</p>
+              <h4 class="font-semibold text-gray-900 mb-1">First spark</h4>
+              <p class="text-sm text-gray-600">Started learning HTML through Chanux Academy tutorials and small practice projects.</p>
+            </div>
+
+            <div class="relative">
+              <span class="absolute -left-6 top-1.5 h-4 w-4 rounded-full bg-primary ring-4 ring-primary-05"></span>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-2">2019 - 2020</p>
+              <h4 class="font-semibold text-gray-900 mb-1">Build the base</h4>
+              <p class="text-sm text-gray-600">Completed the Computer Science certificate at NIBM and an Advanced English course in parallel.</p>
+            </div>
+
+            <div class="relative">
+              <span class="absolute -left-6 top-1.5 h-4 w-4 rounded-full bg-primary ring-4 ring-primary-05"></span>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-2">2020 - 2023</p>
+              <h4 class="font-semibold text-gray-900 mb-1">Stay consistent</h4>
+              <p class="text-sm text-gray-600">Focused on ICT during A/L studies while continuing to improve my technical foundation.</p>
+            </div>
+
+            <div class="relative">
+              <span class="absolute -left-6 top-1.5 h-4 w-4 rounded-full bg-primary ring-4 ring-primary-05"></span>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-2">2023 - Present (2026)</p>
+              <h4 class="font-semibold text-gray-900 mb-1">Level up</h4>
+              <p class="text-sm text-gray-600">Joined SLIIT for Software Engineering and now focus on practical, team-based development work while preparing for the next stage of my degree.</p>
+            </div>
+          </div>
+
+          <div class="mt-8 rounded-2xl bg-gray-50 border border-gray-100 p-5">
+            <p class="text-sm font-semibold text-gray-900 mb-2">Current direction</p>
+            <p class="text-sm text-gray-600">Turning small learning steps into real products, stronger engineering habits, and better collaboration skills.</p>
+          </div>
+        </aside>
+      </div>
+
       <!-- Social Icons -->
-      <div class="flex justify-center space-x-8 text-gray-700">
+      <div class="flex justify-center space-x-8 text-gray-700 mt-12">
         <a href="https://github.com/Aenuka" target="_blank" class="hover:text-primary transition">
           <i class="devicon-github-original text-3xl"></i>
         </a>
@@ -179,7 +277,7 @@
   </section>
 
   <!-- Skills Section -->
-  <section id="skills" class="py-20 px-6 bg-gray-50 scroll-mt-24">
+  <section id="skills" class="py-20 px-6 bg-gray-50 scroll-mt-16">
     <div class="max-w-5xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-10">Skills & Abilities</h2>
       <div class="flex flex-wrap justify-center gap-4 mb-8">
@@ -207,7 +305,7 @@
   </section>
 
   <!-- Projects Section -->
-  <section id="projects" class="py-20 px-6 bg-white border-t border-gray-100 scroll-mt-24">
+  <section id="projects" class="py-20 px-6 bg-white border-t border-gray-100 scroll-mt-16">
     <div class="max-w-5xl mx-auto">
       <h2 class="text-3xl font-bold text-center text-primary mb-10">Projects</h2>
       <div class="grid md:grid-cols-2 gap-8">
@@ -272,7 +370,7 @@
   </section>
 
   <!-- Contact Section -->
-  <section id="contact" class="py-20 px-6 bg-gray-50 border-t border-gray-100 scroll-mt-24">
+  <section id="contact" class="py-20 px-6 bg-gray-50 border-t border-gray-100 scroll-mt-16">
     <div class="max-w-xl mx-auto text-center">
       <h2 class="text-3xl font-bold text-primary mb-6">Contact Me</h2>
       <p class="text-sm text-gray-600 mb-6">Backend is live and this contact form is fully functional. You are welcome to submit a message.</p>
