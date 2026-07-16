@@ -178,7 +178,7 @@
   <header class="fixed top-0 left-0 w-full bg-white text-gray-800 shadow-lg z-50 border-b border-red-100">
     <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center">
-        <a href="/" class="flex items-center space-x-4">
+        <a href="/" class="flex items-center space-x-4" data-route="home">
           <img src="/Wallpaper.png" width="2533" height="2484" alt="Aenuka Buddhakorala logo" class="logo" />
           <div class="leading-tight">
             <span class="text-2xl font-extrabold text-gray-800">Aenuka Buddhakorala</span>
@@ -187,11 +187,11 @@
         </a>
       </div>
       <nav class="hidden md:flex space-x-6 font-medium text-gray-800">
-        <a href="/" class="nav-link active transition">Home</a>
-        <a href="/about/" class="nav-link transition">About</a>
-        <a href="/skills/" class="nav-link transition">Skills</a>
-        <a href="/projects/" class="nav-link transition">Projects</a>
-        <a href="/contact/" class="nav-link transition">Contact</a>
+        <a href="/" class="nav-link active transition" data-nav-link data-route="home">Home</a>
+        <a href="/about" class="nav-link transition" data-nav-link data-route="about">About</a>
+        <a href="/skills" class="nav-link transition" data-nav-link data-route="skills">Skills</a>
+        <a href="/projects" class="nav-link transition" data-nav-link data-route="projects">Projects</a>
+        <a href="/contact" class="nav-link transition" data-nav-link data-route="contact">Contact</a>
       </nav>
     </div>
   </header>
@@ -199,7 +199,7 @@
   <!-- Home Section -->
   <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center text-white pt-28 px-4">
     <h2 class="text-4xl md:text-5xl font-extrabold mb-2 drop-shadow">Aenuka Buddhakorala</h2>
-    <a href="/projects/" class="mt-6 inline-block bg-white text-primary font-semibold py-3 px-8 rounded-full shadow-lg border border-primary transition hover:bg-primary hover:text-white">
+    <a href="/projects" data-route="projects" class="mt-6 inline-block bg-white text-primary font-semibold py-3 px-8 rounded-full shadow-lg border border-primary transition hover:bg-primary hover:text-white">
       See My Work
     </a>
   </section>
@@ -428,6 +428,7 @@
   </section>
 
   <!-- JavaScript -->
+  <script src="/js/routes.js"></script>
   <script src="/js/contact.js"></script>
 </body>
 </html>
