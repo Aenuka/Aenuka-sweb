@@ -160,7 +160,8 @@ function Contact() {
   const [state,setState] = useState({status:"idle",message:""});
   async function submit(e) {
     e.preventDefault(); setState({status:"sending",message:""});
-    const data = Object.fromEntries(new FormData(e.currentTarget));
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form));
     try {
       const res = await fetch("/.netlify/functions/submit-contact",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
       const body = await res.json().catch(()=>({}));
@@ -170,13 +171,16 @@ function Contact() {
           : `Contact service failed (${res.status}). Please try again shortly.`;
         throw new Error(body.error || localHint);
       }
-      e.currentTarget.reset(); setState({status:"sent",message:"Thanks — your message is on its way."});
+      form.reset();
+      setState(body.warning
+        ? {status:"warning",message:`Message saved, but email was not sent: ${body.warning}`}
+        : {status:"sent",message:"Thanks — your message is on its way."});
     } catch(err) { setState({status:"error",message:err.message || "Please try again."}); }
   }
   return <main className="page-enter bg-mist pt-14"><section className="shell grid min-h-[calc(100vh-3.5rem)] gap-16 py-20 md:grid-cols-2 md:items-center md:py-28">
     <div><p className="eyebrow">Get in touch</p><h1 className="headline mt-6">Have an idea?<br/><span className="text-black/25">Let’s shape it.</span></h1><p className="mt-7 max-w-md text-lg leading-relaxed text-black/50">I’m open to internships, collaborations, and interesting conversations about software and product design.</p><div className="mt-12 flex gap-5"><a href="https://github.com/Aenuka" target="_blank" rel="noreferrer"><Github/></a><a href="https://lk.linkedin.com/in/aenuka" target="_blank" rel="noreferrer"><Linkedin/></a></div></div>
     <form onSubmit={submit} className="rounded-[2rem] bg-white p-7 shadow-xl shadow-black/[.04] md:p-10">
-      <div className="grid gap-6"><label className="text-sm font-medium">Name<input required name="name" className="mt-2 w-full rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="Your name"/></label><label className="text-sm font-medium">Email<input required type="email" name="email" className="mt-2 w-full rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="you@example.com"/></label><label className="text-sm font-medium">Message<textarea required name="message" rows="5" className="mt-2 w-full resize-none rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="Tell me a little about your idea."/></label><button disabled={state.status==="sending"} className="button-primary w-full disabled:opacity-50">{state.status==="sending" ? "Sending…" : <>Send message <Send size={16}/></>}</button>{state.message && <p className={`flex items-center gap-2 text-sm ${state.status==="sent"?"text-green-600":"text-red-600"}`}>{state.status==="sent"&&<CheckCircle2 size={16}/>} {state.message}</p>}</div>
+      <div className="grid gap-6"><label className="text-sm font-medium">Name<input required name="name" className="mt-2 w-full rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="Your name"/></label><label className="text-sm font-medium">Email<input required type="email" name="email" className="mt-2 w-full rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="you@example.com"/></label><label className="text-sm font-medium">Message<textarea required name="message" rows="5" className="mt-2 w-full resize-none rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="Tell me a little about your idea."/></label><button disabled={state.status==="sending"} className="button-primary w-full disabled:opacity-50">{state.status==="sending" ? "Sending…" : <>Send message <Send size={16}/></>}</button>{state.message && <p className={`flex items-center gap-2 text-sm ${state.status==="sent" ? "text-green-600" : state.status==="warning" ? "text-amber-600" : "text-red-600"}`}>{state.status==="sent"&&<CheckCircle2 size={16}/>} {state.message}</p>}</div>
     </form>
   </section></main>
 }
