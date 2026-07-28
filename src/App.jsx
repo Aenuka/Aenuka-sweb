@@ -97,7 +97,7 @@ function Home() {
       <div className="hero-glow" aria-hidden="true" />
       <div className="shell relative z-10 py-24 text-center">
         <p className="eyebrow reveal reveal-1 mb-7">Software Engineer · Colombo</p>
-        <h1 className="display reveal reveal-2 mx-auto max-w-5xl">Ideas, engineered<br/>with intention.</h1>
+        <h1 className="display reveal reveal-2 mx-auto max-w-5xl">Aenuka Buddhakorala</h1>
         <p className="reveal reveal-3 mx-auto mt-8 max-w-xl text-lg leading-relaxed text-black/55">I’m Aenuka, a software engineering undergraduate building clear, scalable digital experiences from interface to infrastructure.</p>
         <div className="reveal reveal-4 mt-10 flex flex-wrap justify-center gap-3">
           <Link className="button-primary" to="/projects">Explore my work <ArrowRight size={16}/></Link>
@@ -108,23 +108,22 @@ function Home() {
     <section className="shell py-6 md:py-10">
       <div className="grid gap-5 md:grid-cols-2">
         <Link to="/projects" className="card group min-h-[470px] bg-ink p-8 text-white md:p-12">
-          <p className="text-sm text-white/50">Selected work</p><h2 className="mt-4 max-w-md text-4xl font-semibold tracking-[-.04em] md:text-5xl">Systems made for the real world.</h2>
+          <p className="text-sm text-white/50">Selected work</p><h2 className="mt-4 max-w-md text-4xl font-semibold tracking-[-.04em] md:text-5xl">Software projects</h2>
           <div className="mt-20 flex aspect-[16/8] items-center justify-center rounded-3xl bg-gradient-to-br from-blue to-[#69a9ff] shadow-2xl shadow-blue/30 transition group-hover:scale-[1.02]"><Code2 size={72} strokeWidth={1.1}/></div>
         </Link>
         <Link to="/skills" className="card group min-h-[470px] p-8 md:p-12">
-          <p className="text-sm text-black/45">Capabilities</p><h2 className="mt-4 max-w-md text-4xl font-semibold tracking-[-.04em] md:text-5xl">Full stack.<br/>No blind spots.</h2>
+          <p className="text-sm text-black/45">Capabilities</p><h2 className="mt-4 max-w-md text-4xl font-semibold tracking-[-.04em] md:text-5xl">Technical skills</h2>
           <div className="mt-16 grid grid-cols-2 gap-3">{["React","Spring Boot","Node.js","Docker"].map(x => <span key={x} className="rounded-2xl bg-white p-5 text-sm font-medium shadow-sm">{x}</span>)}</div>
         </Link>
       </div>
     </section>
-    <section className="shell py-24 text-center md:py-36"><p className="eyebrow">Currently</p><h2 className="headline mx-auto mt-5 max-w-4xl">Learning deeply.<br/><span className="text-black/25">Building deliberately.</span></h2></section>
   </main>
 }
 
 function About() {
   const timeline = [["2019","The first spark","Started building small web experiences after discovering HTML."],["2019–20","A stronger base","Completed Computer Science and Advanced English certificates at NIBM."],["2020–23","Stayed curious","Studied ICT while steadily expanding my technical foundation."],["2023–Now","Engineering at scale","Studying Software Engineering at SLIIT and leading practical team projects."]];
   return <main className="page-enter pt-14">
-    <section className="shell py-24 md:py-36"><p className="eyebrow">About me</p><h1 className="headline mt-6 max-w-5xl">Curiosity became craft.<br/><span className="text-black/25">Craft became a career.</span></h1></section>
+    <section className="shell py-24 md:py-36"><p className="eyebrow">About me</p><h1 className="headline mt-6 max-w-5xl">Aenuka Buddhakorala</h1></section>
     <section className="bg-mist py-20 md:py-28"><div className="shell grid gap-14 md:grid-cols-[.8fr_1.2fr]">
       <div><p className="text-2xl font-semibold tracking-tight">A builder at heart.</p><p className="mt-4 text-black/50">Software Engineering undergraduate at SLIIT. Third year, moving into the fourth.</p></div>
       <div className="space-y-6 text-xl leading-relaxed text-black/70"><p>I started by following HTML tutorials after my O/L exams and became fascinated by the immediacy of turning an idea into something people can use.</p><p>Today, I work across frontend, backend, mobile, and distributed systems. I care about calm interfaces, understandable code, and teams that learn together.</p></div>
@@ -140,7 +139,7 @@ const skillGroups = [
   {icon: Palette, title:"Quality & collaboration", text:"From design handoff to automated confidence in every release.", skills:["Figma","Cypress","Jira","Agile","Scrum"]},
 ];
 function Skills() {
-  return <main className="page-enter bg-mist pt-14"><section className="shell py-24 text-center md:py-36"><p className="eyebrow">Skills & capabilities</p><h1 className="headline mx-auto mt-6 max-w-4xl">Tools are temporary.<br/><span className="text-black/25">Good thinking lasts.</span></h1><p className="mx-auto mt-7 max-w-xl text-lg text-black/50">A practical toolkit for taking products from a blank canvas to a dependable release.</p></section>
+  return <main className="page-enter bg-mist pt-14"><section className="shell py-24 text-center md:py-36"><p className="eyebrow">Skills & capabilities</p><h1 className="headline mx-auto mt-6 max-w-4xl">Technical skills</h1><p className="mx-auto mt-7 max-w-xl text-lg text-black/50">Technologies and practices used across frontend, backend, infrastructure, testing, and product delivery.</p></section>
   <section className="shell grid gap-5 pb-24 md:grid-cols-2">{skillGroups.map(({icon:Icon,title,text,skills}) => <article key={title} className="card bg-white p-8 md:p-11"><Icon className="text-blue" size={32} strokeWidth={1.5}/><h2 className="mt-16 text-3xl font-semibold tracking-tight">{title}</h2><p className="mt-3 max-w-md leading-relaxed text-black/50">{text}</p><div className="mt-8 flex flex-wrap gap-2">{skills.map(x=><span key={x} className="rounded-full bg-mist px-4 py-2 text-xs font-medium">{x}</span>)}</div></article>)}</section></main>
 }
 
@@ -152,7 +151,7 @@ const projects = [
   {n:"05", title:"Cypress Test Suite", role:"Group Lead", desc:"An automation project covering fixtures, assertions, reporting, API mocking, and reliable testing practices.", tags:["Cypress","QA Automation"], link:"https://github.com/Aenuka/CypressTestRepo"},
 ];
 function Projects() {
-  return <main className="page-enter pt-14"><section className="shell py-24 md:py-36"><p className="eyebrow">Selected work</p><h1 className="headline mt-6 max-w-5xl">Built to solve.<br/><span className="text-black/25">Designed to endure.</span></h1></section>
+  return <main className="page-enter pt-14"><section className="shell py-24 md:py-36"><p className="eyebrow">Selected work</p><h1 className="headline mt-6 max-w-5xl">Software projects</h1></section>
   <section className="shell pb-24"><div className="divide-y border-t">{projects.map((p,i)=><article key={p.title} className="group grid gap-6 py-10 md:grid-cols-[80px_1fr_1fr_auto] md:items-center md:py-14"><p className="text-sm text-black/35">{p.n}</p><div><p className="text-xs font-semibold uppercase tracking-wider text-blue">{p.role}</p><h2 className="mt-2 text-3xl font-semibold tracking-[-.03em]">{p.title}</h2></div><div><p className="max-w-md leading-relaxed text-black/50">{p.desc}</p><div className="mt-4 flex flex-wrap gap-2">{p.tags.map(x=><span key={x} className="text-xs text-black/40">{x}</span>)}</div></div><a href={p.link} target="_blank" rel="noreferrer" aria-label={`View ${p.title} on GitHub`} className="flex h-12 w-12 items-center justify-center rounded-full border transition group-hover:border-blue group-hover:bg-blue group-hover:text-white"><ArrowUpRight size={19}/></a></article>)}</div></section></main>
 }
 
@@ -178,7 +177,7 @@ function Contact() {
     } catch(err) { setState({status:"error",message:err.message || "Please try again."}); }
   }
   return <main className="page-enter bg-mist pt-14"><section className="shell grid min-h-[calc(100vh-3.5rem)] gap-16 py-20 md:grid-cols-2 md:items-center md:py-28">
-    <div><p className="eyebrow">Get in touch</p><h1 className="headline mt-6">Have an idea?<br/><span className="text-black/25">Let’s shape it.</span></h1><p className="mt-7 max-w-md text-lg leading-relaxed text-black/50">I’m open to internships, collaborations, and interesting conversations about software and product design.</p><div className="mt-12 flex gap-5"><a href="https://github.com/Aenuka" target="_blank" rel="noreferrer"><Github/></a><a href="https://lk.linkedin.com/in/aenuka" target="_blank" rel="noreferrer"><Linkedin/></a></div></div>
+    <div><p className="eyebrow">Get in touch</p><h1 className="headline mt-6">Contact me</h1><p className="mt-7 max-w-md text-lg leading-relaxed text-black/50">I’m open to internships, collaborations, and conversations about software and product design.</p><div className="mt-12 flex gap-5"><a href="https://github.com/Aenuka" target="_blank" rel="noreferrer"><Github/></a><a href="https://lk.linkedin.com/in/aenuka" target="_blank" rel="noreferrer"><Linkedin/></a></div></div>
     <form onSubmit={submit} className="rounded-[2rem] bg-white p-7 shadow-xl shadow-black/[.04] md:p-10">
       <div className="grid gap-6"><label className="text-sm font-medium">Name<input required name="name" className="mt-2 w-full rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="Your name"/></label><label className="text-sm font-medium">Email<input required type="email" name="email" className="mt-2 w-full rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="you@example.com"/></label><label className="text-sm font-medium">Message<textarea required name="message" rows="5" className="mt-2 w-full resize-none rounded-xl border bg-mist px-4 py-3.5 font-normal outline-none focus:border-blue" placeholder="Tell me a little about your idea."/></label><button disabled={state.status==="sending"} className="button-primary w-full disabled:opacity-50">{state.status==="sending" ? "Sending…" : <>Send message <Send size={16}/></>}</button>{state.message && <p className={`flex items-center gap-2 text-sm ${state.status==="sent" ? "text-green-600" : state.status==="warning" ? "text-amber-600" : "text-red-600"}`}>{state.status==="sent"&&<CheckCircle2 size={16}/>} {state.message}</p>}</div>
     </form>
