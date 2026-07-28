@@ -1,27 +1,13 @@
 [build]
-  publish = "public"
+  publish = "dist"
   functions = "src/functions"
+  command = "npm run build"
 
 [dev]
-  publish = "public"
+  publish = "dist"
   functions = "src/functions"
 
 [[redirects]]
-  from = "/about"
-  to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/skills"
-  to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/projects"
-  to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/contact"
+  from = "/*"
   to = "/index.html"
   status = 200
