@@ -164,7 +164,12 @@ function Contact() {
     try {
       const res = await fetch("/.netlify/functions/submit-contact",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
       const body = await res.json().catch(()=>({}));
-      if(!res.ok) throw new Error(body.error || "Something went wrong.");
+      if(!res.ok) {
+        const localHint = res.status === 404
+          ? "Contact service is unavailable. Run the site with Netlify Dev, not Vite alone."
+          : `Contact service failed (${res.status}). Please try again shortly.`;
+        throw new Error(body.error || localHint);
+      }
       e.currentTarget.reset(); setState({status:"sent",message:"Thanks — your message is on its way."});
     } catch(err) { setState({status:"error",message:err.message || "Please try again."}); }
   }

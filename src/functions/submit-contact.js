@@ -1,9 +1,8 @@
-require('dotenv').config();
+import "dotenv/config";
+import { neon } from "@neondatabase/serverless";
+import nodemailer from "nodemailer";
 
-const { neon } = require('@neondatabase/serverless');
-const nodemailer = require('nodemailer');
-
-exports.handler = async function(event, context) {
+export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -122,4 +121,4 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({ error: error.message || 'Server error occurred' })
     };
   }
-};
+}
