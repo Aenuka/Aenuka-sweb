@@ -1,30 +1,9 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, NavLink, Link, useLocation } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Github, Linkedin, Instagram, Menu, X, Code2, Server, Database, Boxes, Palette, CheckCircle2, Send } from "lucide-react";
+import { getSeo } from "./seo";
 
 const nav = [["About", "/about"], ["Skills", "/skills"], ["Projects", "/projects"], ["Contact", "/contact"]];
-const seo = {
-  "/": {
-    title: "Aenuka Buddhakorala | Software Engineer",
-    description: "Aenuka Buddhakorala is a software engineer in Sri Lanka building thoughtful web applications, backend systems, and digital products.",
-  },
-  "/about": {
-    title: "About Aenuka Buddhakorala | Software Engineer",
-    description: "Learn about Aenuka Buddhakorala’s software engineering journey, education at SLIIT, interests, and approach to building digital products.",
-  },
-  "/skills": {
-    title: "Software Engineering Skills | Aenuka Buddhakorala",
-    description: "Explore Aenuka Buddhakorala’s skills across React, JavaScript, Spring Boot, Node.js, databases, Docker, Kubernetes, design, and testing.",
-  },
-  "/projects": {
-    title: "Software Projects | Aenuka Buddhakorala",
-    description: "Explore software projects by Aenuka Buddhakorala, including healthcare microservices, Quizora, Cey Harvest, MERN systems, and Cypress testing.",
-  },
-  "/contact": {
-    title: "Contact Aenuka Buddhakorala | Software Engineer",
-    description: "Contact Aenuka Buddhakorala for software engineering opportunities, internships, collaborations, and digital product development.",
-  },
-};
 
 function setMeta(selector, attribute, value) {
   let element = document.head.querySelector(selector);
@@ -40,22 +19,26 @@ function setMeta(selector, attribute, value) {
 function Seo() {
   const { pathname } = useLocation();
   useEffect(() => {
-    const page = seo[pathname] || seo["/"];
-    const canonicalUrl = `https://www.aenuin.com${pathname === "/" ? "/" : pathname}`;
+    const page = getSeo(pathname);
     document.title = page.title;
     setMeta('meta[name="description"]', "content", page.description);
+    setMeta('meta[name="keywords"]', "content", page.keywords);
     setMeta('meta[property="og:title"]', "content", page.title);
     setMeta('meta[property="og:description"]', "content", page.description);
-    setMeta('meta[property="og:url"]', "content", canonicalUrl);
+    setMeta('meta[property="og:url"]', "content", page.canonicalUrl);
+    setMeta('meta[property="og:image"]', "content", page.image);
+    setMeta('meta[property="og:image:alt"]', "content", page.imageAlt);
     setMeta('meta[name="twitter:title"]', "content", page.title);
     setMeta('meta[name="twitter:description"]', "content", page.description);
+    setMeta('meta[name="twitter:image"]', "content", page.image);
+    setMeta('meta[name="twitter:image:alt"]', "content", page.imageAlt);
     let canonical = document.head.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement("link");
       canonical.rel = "canonical";
       document.head.appendChild(canonical);
     }
-    canonical.href = canonicalUrl;
+    canonical.href = page.canonicalUrl;
   }, [pathname]);
   return null;
 }
