@@ -169,5 +169,6 @@ function Contact() {
 
 function ScrollTop() { const {pathname}=useLocation(); useEffect(()=>window.scrollTo(0,0),[pathname]); return null; }
 export default function App() {
-  return <><Seo/><ScrollTop/><Header/><Routes><Route path="/" element={<Home/>}/><Route path="/about" element={<About/>}/><Route path="/skills" element={<Skills/>}/><Route path="/projects" element={<Projects/>}/><Route path="/contact" element={<Contact/>}/><Route path="*" element={<Home/>}/></Routes><Footer/></>;
+  const location = useLocation();
+  return <><Seo/><ScrollTop/><Header/><Routes location={location} key={location.pathname}><Route path="/" element={<Home/>}/><Route path="/about" element={<About/>}/><Route path="/skills" element={<Skills/>}/><Route path="/projects" element={<Projects/>}/><Route path="/contact" element={<Contact/>}/><Route path="*" element={<Home/>}/></Routes><Footer/></>;
 }
