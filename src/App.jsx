@@ -32,6 +32,14 @@ function Seo() {
     setMeta('meta[name="twitter:description"]', "content", page.description);
     setMeta('meta[name="twitter:image"]', "content", page.image);
     setMeta('meta[name="twitter:image:alt"]', "content", page.imageAlt);
+    let structuredData = document.head.querySelector('script[data-page-schema]');
+    if (!structuredData) {
+      structuredData = document.createElement("script");
+      structuredData.type = "application/ld+json";
+      structuredData.dataset.pageSchema = "true";
+      document.head.appendChild(structuredData);
+    }
+    structuredData.textContent = JSON.stringify(page.structuredData);
     let canonical = document.head.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement("link");
@@ -127,15 +135,15 @@ function Skills() {
 }
 
 const projects = [
-  {n:"01", title:"Healthcare Microservices Platform", role:"Group Lead · Ongoing", desc:"A scalable healthcare platform built around Spring Boot microservices, containerized with Docker and orchestrated using Kubernetes.", tags:["Spring Boot","Docker","Kubernetes"], link:"https://github.com/Aenuka/SLIIT-SE3020-SE-120-Healthcare-Microservices-Platform"},
-  {n:"02", title:"Quizora", role:"Group Lead", desc:"An online exam management system shaped through industry research, agile delivery, and flexible exam workflows.", tags:["Agile","Jira","Full Stack"], link:"https://github.com/Aenuka/Quizora"},
-  {n:"03", title:"Cey Harvest", role:"Semi-finalist · IDEALIZE 2025", desc:"An agriculture-focused platform designed to improve farming logistics and information management.", tags:["Spring Boot","Team Project"], link:"https://github.com/damithch/CeyHarvest"},
-  {n:"04", title:"Animal Hospital Inventory", role:"Full-stack contributor", desc:"A MERN inventory system with automated reordering and supplier notification workflows.", tags:["MERN","MVC"], link:"https://github.com/kaveeshapasan2002/City_Pet_AHMS"},
-  {n:"05", title:"Cypress Test Suite", role:"Group Lead", desc:"An automation project covering fixtures, assertions, reporting, API mocking, and reliable testing practices.", tags:["Cypress","QA Automation"], link:"https://github.com/Aenuka/CypressTestRepo"},
+  {n:"01", title:"Healthcare Microservices Platform", role:"Group Lead · Ongoing", desc:"A scalable healthcare platform built around Spring Boot microservices, containerized with Docker and orchestrated using Kubernetes.", tags:["Spring Boot","Docker","Kubernetes"], link:"#"},
+  {n:"02", title:"Quizora", role:"Group Lead", desc:"An online exam management system shaped through industry research, agile delivery, and flexible exam workflows.", tags:["Agile","Jira","Full Stack"], link:"#"},
+  {n:"03", title:"Cey Harvest", role:"Semi-finalist · IDEALIZE 2025", desc:"An agriculture-focused platform designed to improve farming logistics and information management.", tags:["Spring Boot","Team Project"], link:"#"},
+  {n:"04", title:"Animal Hospital Inventory", role:"Full-stack contributor", desc:"A MERN inventory system with automated reordering and supplier notification workflows.", tags:["MERN","MVC"], link:"#"},
+  {n:"05", title:"Cypress Test Suite", role:"Group Lead", desc:"An automation project covering fixtures, assertions, reporting, API mocking, and reliable testing practices.", tags:["Cypress","QA Automation"], link:"#"},
 ];
 function Projects() {
   return <main className="page-enter pt-14"><section className="shell py-24 md:py-36"><p className="eyebrow">Selected work</p><h1 className="headline mt-6 max-w-5xl">Software projects</h1></section>
-  <section className="shell pb-24"><div className="divide-y border-t">{projects.map((p,i)=><article key={p.title} className="group grid gap-6 py-10 md:grid-cols-[80px_1fr_1fr_auto] md:items-center md:py-14"><p className="text-sm text-black/35">{p.n}</p><div><p className="text-xs font-semibold uppercase tracking-wider text-blue">{p.role}</p><h2 className="mt-2 text-3xl font-semibold tracking-[-.03em]">{p.title}</h2></div><div><p className="max-w-md leading-relaxed text-black/50">{p.desc}</p><div className="mt-4 flex flex-wrap gap-2">{p.tags.map(x=><span key={x} className="text-xs text-black/40">{x}</span>)}</div></div><a href={p.link} target="_blank" rel="noreferrer" aria-label={`View ${p.title} on GitHub`} className="flex h-12 w-12 items-center justify-center rounded-full border transition group-hover:border-blue group-hover:bg-blue group-hover:text-white"><ArrowUpRight size={19}/></a></article>)}</div></section></main>
+  <section className="shell pb-24"><div className="divide-y border-t">{projects.map((p)=><article key={p.title} className="group grid gap-6 py-10 md:grid-cols-[80px_1fr_1fr_auto] md:items-center md:py-14"><p className="text-sm text-black/35">{p.n}</p><div><p className="text-xs font-semibold uppercase tracking-wider text-blue">{p.role}</p><h2 className="mt-2 text-3xl font-semibold tracking-[-.03em]">{p.title}</h2></div><div><p className="max-w-md leading-relaxed text-black/50">{p.desc}</p><div className="mt-4 flex flex-wrap gap-2">{p.tags.map(x=><span key={x} className="text-xs text-black/40">{x}</span>)}</div></div><a href={p.link} aria-label={`Project link placeholder for ${p.title}`} title="Project link coming soon" className="flex h-12 w-12 items-center justify-center rounded-full border transition group-hover:border-blue group-hover:bg-blue group-hover:text-white"><ArrowUpRight size={19}/></a></article>)}</div></section></main>
 }
 
 function Contact() {

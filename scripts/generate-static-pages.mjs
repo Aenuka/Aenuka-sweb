@@ -48,6 +48,15 @@ function renderPage(path) {
     `<link rel="canonical" href="${escapeHtml(page.canonicalUrl)}" />`,
   );
 
+  html = html.replace(
+    "</head>",
+    `    <script type="application/ld+json" data-page-schema>${JSON.stringify(page.structuredData).replaceAll("<", "\\u003c")}</script>\n  </head>`,
+  );
+  html = html.replace(
+    '<div id="root"></div>',
+    `<div id="root"></div><noscript><main><h1>${escapeHtml(page.heading)}</h1><p>${escapeHtml(page.summary)}</p><p><a href="${escapeHtml(page.canonicalUrl)}">View ${escapeHtml(page.heading)}</a></p></main></noscript>`,
+  );
+
   return html;
 }
 

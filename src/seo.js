@@ -1,5 +1,6 @@
 export const siteUrl = "https://www.aenuin.com";
 export const socialImage = `${siteUrl}/Wallpaper-512.png`;
+export const personId = `${siteUrl}/#person`;
 
 export const seo = {
   "/": {
@@ -8,6 +9,9 @@ export const seo = {
       "Aenuka Buddhakorala is a software engineer in Sri Lanka building thoughtful web applications, backend systems, and digital products.",
     keywords: "Aenuka Buddhakorala, Aenuin, software engineer Sri Lanka, web developer, portfolio",
     imageAlt: "Aenuka Buddhakorala, software engineer",
+    heading: "Aenuka Buddhakorala — software engineer in Colombo, Sri Lanka",
+    summary:
+      "Aenuka Buddhakorala is a Software Engineering undergraduate at SLIIT who builds accessible web interfaces, backend services, and distributed systems using React, Spring Boot, Node.js, Docker, and Kubernetes.",
   },
   "/about": {
     title: "About Aenuka Buddhakorala | Software Engineer",
@@ -15,6 +19,9 @@ export const seo = {
       "Learn about Aenuka Buddhakorala’s software engineering journey, education at SLIIT, interests, and approach to building digital products.",
     keywords: "about Aenuka Buddhakorala, SLIIT software engineering, software engineer journey",
     imageAlt: "About Aenuka Buddhakorala",
+    heading: "About Aenuka Buddhakorala",
+    summary:
+      "Aenuka is a Sri Lankan software engineer and SLIIT undergraduate with experience across frontend, backend, mobile, testing, and distributed systems. He values clear interfaces, maintainable code, and collaborative teams.",
   },
   "/skills": {
     title: "Software Engineering Skills | Aenuka Buddhakorala",
@@ -22,6 +29,9 @@ export const seo = {
       "Explore Aenuka Buddhakorala’s skills across React, JavaScript, Spring Boot, Node.js, databases, Docker, Kubernetes, design, and testing.",
     keywords: "React, Spring Boot, Node.js, Docker, Kubernetes, software engineering skills",
     imageAlt: "Software engineering skills of Aenuka Buddhakorala",
+    heading: "Software engineering skills",
+    summary:
+      "Aenuka works with React, JavaScript, HTML, CSS, Tailwind CSS, Java, Spring Boot, Node.js, Express.js, Python, SQL, MongoDB, Docker, Kubernetes, Cypress, Figma, GitHub, Jira, Agile, and Scrum.",
   },
   "/projects": {
     title: "Software Projects | Aenuka Buddhakorala",
@@ -29,6 +39,9 @@ export const seo = {
       "Explore software projects by Aenuka Buddhakorala, including healthcare microservices, Quizora, Cey Harvest, MERN systems, and Cypress testing.",
     keywords: "software projects, healthcare microservices, Quizora, Cey Harvest, MERN, Cypress",
     imageAlt: "Software projects by Aenuka Buddhakorala",
+    heading: "Software projects by Aenuka Buddhakorala",
+    summary:
+      "Selected work includes a Kubernetes-orchestrated healthcare microservices platform, the Quizora exam management system, the Cey Harvest agriculture platform, an animal hospital inventory system, and a Cypress automation suite.",
   },
   "/contact": {
     title: "Contact Aenuka Buddhakorala | Software Engineer",
@@ -36,6 +49,9 @@ export const seo = {
       "Contact Aenuka Buddhakorala for software engineering opportunities, internships, collaborations, and digital product development.",
     keywords: "contact Aenuka Buddhakorala, software engineer Sri Lanka, software collaboration",
     imageAlt: "Contact Aenuka Buddhakorala",
+    heading: "Contact Aenuka Buddhakorala",
+    summary:
+      "Aenuka is available for software engineering internships, collaborations, and conversations about web applications, backend systems, distributed systems, and digital product development.",
   },
 };
 
@@ -46,10 +62,69 @@ export function normalizePath(pathname) {
 
 export function getSeo(pathname) {
   const path = normalizePath(pathname);
+  const page = seo[path] || seo["/"];
   return {
-    ...(seo[path] || seo["/"]),
+    ...page,
     path,
     canonicalUrl: `${siteUrl}${path === "/" ? "/" : path}`,
     image: socialImage,
+    structuredData: getStructuredData(path, page),
   };
+}
+
+function getStructuredData(path, page) {
+  const canonicalUrl = `${siteUrl}${path === "/" ? "/" : path}`;
+  const graph = [
+    {
+      "@type": "WebPage",
+      "@id": `${canonicalUrl}#webpage`,
+      url: canonicalUrl,
+      name: page.title,
+      description: page.description,
+      isPartOf: { "@id": `${siteUrl}/#website` },
+      about: { "@id": personId },
+      inLanguage: "en",
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${siteUrl}/` },
+        ...(path === "/"
+          ? []
+          : [{ "@type": "ListItem", position: 2, name: page.heading, item: canonicalUrl }]),
+      ],
+    },
+  ];
+
+  if (path === "/projects") {
+    graph.push({
+      "@type": "ItemList",
+      name: "Selected software projects",
+      numberOfItems: 5,
+      itemListElement: [
+        ["Healthcare Microservices Platform", "Spring Boot, Docker, and Kubernetes healthcare platform"],
+        ["Quizora", "Online exam management system"],
+        ["Cey Harvest", "Agriculture logistics and information platform"],
+        ["Animal Hospital Inventory", "MERN inventory and automated reordering system"],
+        ["Cypress Test Suite", "Automated web and API testing suite"],
+      ].map(([name, description], index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "SoftwareSourceCode",
+          name,
+          description,
+          author: { "@id": personId },
+          programmingLanguage: ["JavaScript", "Java"],
+        },
+      })),
+    });
+  }
+
+  if (path === "/about") {
+    graph[0]["@type"] = "ProfilePage";
+    graph[0].mainEntity = { "@id": personId };
+  }
+
+  return { "@context": "https://schema.org", "@graph": graph };
 }
