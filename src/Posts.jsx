@@ -9,6 +9,21 @@ import {
 const endpoint = "/.netlify/functions/posts";
 const authEndpoint = "/.netlify/functions/admin-auth";
 
+function removeReplyBranch(replies, replyId) {
+  const removed = new Set([replyId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const reply of replies) {
+      if (removed.has(reply.parent_reply_id) && !removed.has(reply.id)) {
+        removed.add(reply.id);
+        changed = true;
+      }
+    }
+  }
+  return replies.filter((reply) => !removed.has(reply.id));
+}
+
 function friendlyDate(date) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(date));
 }
@@ -20,7 +35,7 @@ async function getPosts() {
   return data.posts || [];
 }
 
-function ReplyForm({ postId, onAdded }) {
+function ReplyForm({ postId, parentReplyId = null, onAdded, onCancel, compact = false }) {
   const [state, setState] = useState({ sending: false, error: "" });
   async function submit(event) {
     event.preventDefault();
@@ -31,12 +46,13 @@ function ReplyForm({ postId, onAdded }) {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "reply", postId, ...values }),
+        body: JSON.stringify({ action: "reply", postId, parentReplyId, ...values }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not add your reply.");
       form.reset();
       onAdded(data.reply);
+      onCancel?.();
     } catch (error) {
       setState({ sending: false, error: error.message });
       return;
@@ -44,16 +60,41 @@ function ReplyForm({ postId, onAdded }) {
     setState({ sending: false, error: "" });
   }
 
-  return <form onSubmit={submit} className="mt-6 border-t pt-5">
+  return <form onSubmit={submit} className={compact ? "mt-3 rounded-2xl border bg-white p-3" : "mt-6 border-t pt-5"}>
     <div className="grid gap-3 sm:grid-cols-[160px_1fr_auto]">
       <input name="name" maxLength="60" className="post-input" placeholder="Name (optional)" aria-label="Your name, optional" />
-      <input name="message" required maxLength="1000" className="post-input" placeholder="Write a reply…" aria-label="Reply" />
+      <input name="message" required maxLength="1000" className="post-input" placeholder={parentReplyId ? "Write your response…" : "Write a reply…"} aria-label="Reply" />
       <button disabled={state.sending} className="button-primary px-5">
         {state.sending ? <LoaderCircle className="animate-spin" size={17}/> : <Send size={16}/>} Reply
       </button>
     </div>
+    {compact && <button type="button" onClick={onCancel} className="mt-2 px-2 text-xs font-medium text-black/40 transition hover:text-black">Cancel</button>}
     {state.error && <p className="mt-2 text-sm text-red-600">{state.error}</p>}
   </form>;
+}
+
+function ReplyThread({ reply, replies, postId, onAdded, depth = 0 }) {
+  const [replying, setReplying] = useState(false);
+  const children = replies.filter((item) => item.parent_reply_id === reply.id);
+  const nestedClass = depth === 0 ? "" : depth <= 3 ? "ml-3 border-l border-black/10 pl-3 sm:ml-6 sm:pl-4" : "mt-2";
+
+  return <div className={nestedClass}>
+    <div className={`rounded-2xl px-4 py-3 ${reply.is_admin ? "border border-blue/10 bg-blue/[.045]" : "bg-mist"}`}>
+      <div className="flex flex-wrap items-center gap-x-2">
+        <span className="text-sm font-semibold">{reply.name || "Anonymous"}</span>
+        {reply.is_admin && <span className="rounded-full bg-blue/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue">Aenuka</span>}
+        <time className="text-[11px] text-black/35">{friendlyDate(reply.created_at)}</time>
+      </div>
+      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/65">{reply.message}</p>
+      {depth < 7 && <button type="button" onClick={() => setReplying((open) => !open)} className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-blue transition hover:text-[#0077ed]">
+        <MessageCircle size={13}/> Reply
+      </button>}
+    </div>
+    {replying && <ReplyForm compact postId={postId} parentReplyId={reply.id} onAdded={onAdded} onCancel={() => setReplying(false)}/>}
+    {children.length > 0 && <div className="mt-2 space-y-2">
+      {children.map((child) => <ReplyThread key={child.id} reply={child} replies={replies} postId={postId} onAdded={onAdded} depth={depth + 1}/>)}
+    </div>}
+  </div>;
 }
 
 export function Posts() {
@@ -99,24 +140,7 @@ export function Posts() {
               <MessageCircle size={17}/> {post.replies?.length || 0} {(post.replies?.length || 0) === 1 ? "reply" : "replies"}
             </div>
             {post.replies?.length > 0 && <div className="mt-4 space-y-3">
-              {post.replies.filter((reply) => !reply.parent_reply_id).map((reply) => <div key={reply.id}>
-                <div className="rounded-2xl bg-mist px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-x-2">
-                    <span className="text-sm font-semibold">{reply.name || "Anonymous"}</span>
-                    {reply.is_admin && <span className="rounded-full bg-blue/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue">Aenuka</span>}
-                    <time className="text-[11px] text-black/35">{friendlyDate(reply.created_at)}</time>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/65">{reply.message}</p>
-                </div>
-                {post.replies.filter((child) => child.parent_reply_id === reply.id).map((child) => <div key={child.id} className="ml-5 mt-2 rounded-2xl border border-blue/10 bg-blue/[.045] px-4 py-3 sm:ml-10">
-                  <div className="flex flex-wrap items-center gap-x-2">
-                    <span className="text-sm font-semibold">{child.name}</span>
-                    <span className="rounded-full bg-blue/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue">Aenuka</span>
-                    <time className="text-[11px] text-black/35">{friendlyDate(child.created_at)}</time>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/65">{child.message}</p>
-                </div>)}
-              </div>)}
+              {post.replies.filter((reply) => !reply.parent_reply_id).map((reply) => <ReplyThread key={reply.id} reply={reply} replies={post.replies} postId={post.id} onAdded={(newReply) => addReply(post.id, newReply)}/>)}
             </div>}
             <ReplyForm postId={post.id} onAdded={(reply) => addReply(post.id, reply)}/>
           </div>
@@ -387,7 +411,7 @@ export function AdminPosts() {
   }
 
   async function removeVisitorReply(postId, replyId) {
-    if (!window.confirm("Delete this visitor reply and your responses to it?")) return;
+    if (!window.confirm("Delete this reply and every nested response beneath it?")) return;
     setCommentState({ busy: replyId, error: "" });
     try {
       const response = await fetch(`${endpoint}?replyId=${replyId}`, {
@@ -397,7 +421,7 @@ export function AdminPosts() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not delete the reply.");
       setPosts((items) => items.map((post) => post.id === postId
-        ? { ...post, replies: (post.replies || []).filter((reply) => reply.id !== replyId && reply.parent_reply_id !== replyId) }
+        ? { ...post, replies: removeReplyBranch(post.replies || [], replyId) }
         : post
       ));
       if (replyingTo === replyId) {
@@ -480,20 +504,21 @@ export function AdminPosts() {
             <MessageCircle className="text-black/25" size={20}/>
           </div>
           {commentState.error && <p className="mt-3 text-sm text-red-600">{commentState.error}</p>}
-          {posts.every((post) => !(post.replies || []).some((reply) => !reply.parent_reply_id && !reply.is_admin))
+          {posts.every((post) => !(post.replies || []).some((reply) => !reply.is_admin))
             ? <p className="mt-6 text-sm text-black/40">Visitor replies will appear here.</p>
             : <div className="mt-4 divide-y">
               {posts.flatMap((post) => (post.replies || [])
-                .filter((reply) => !reply.parent_reply_id && !reply.is_admin)
+                .filter((reply) => !reply.is_admin)
                 .map((reply) => ({ post, reply }))
               ).map(({ post, reply }) => <div key={reply.id} className="py-5">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-blue">{post.title}</p>
+                {reply.parent_reply_id && <p className="mt-1 text-[11px] text-black/35">Replying to {(post.replies || []).find((item) => item.id === reply.parent_reply_id)?.name || "a previous message"}</p>}
                 <div className="mt-2 flex items-baseline justify-between gap-3">
                   <p className="text-sm font-semibold">{reply.name || "Anonymous"}</p>
                   <time className="shrink-0 text-[10px] text-black/30">{friendlyDate(reply.created_at)}</time>
                 </div>
                 <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/60">{reply.message}</p>
-                {(post.replies || []).filter((child) => child.parent_reply_id === reply.id).map((child) => <div key={child.id} className="mt-3 rounded-xl bg-blue/[.055] px-3 py-2.5">
+                {(post.replies || []).filter((child) => child.parent_reply_id === reply.id && child.is_admin).map((child) => <div key={child.id} className="mt-3 rounded-xl bg-blue/[.055] px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-blue">Your reply</span>
                     <time className="text-[10px] text-black/30">{friendlyDate(child.created_at)}</time>

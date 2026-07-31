@@ -62,6 +62,20 @@ async function setup(sql) {
   await setupAdminAuth(sql);
 }
 
+async function getReplyDepth(sql, replyId) {
+  const [result] = await sql`
+    WITH RECURSIVE ancestors AS (
+      SELECT id, parent_reply_id FROM post_replies WHERE id=${replyId}
+      UNION ALL
+      SELECT r.id, r.parent_reply_id
+      FROM post_replies r
+      JOIN ancestors a ON r.id=a.parent_reply_id
+    )
+    SELECT COUNT(*)::INTEGER AS depth FROM ancestors
+  `;
+  return result?.depth || 0;
+}
+
 export async function handler(event) {
   const connectionString = process.env.NEON_DB_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!connectionString) return response(500, { error: "Database connection is not configured." });
@@ -90,12 +104,24 @@ export async function handler(event) {
 
     if (event.httpMethod === "POST" && body.action === "reply") {
       const postId = Number(body.postId);
+      const parentReplyId = Number(body.parentReplyId) || null;
       const name = cleanText(body.name, 60) || "Anonymous";
       const message = cleanText(body.message, 1000);
       if (!postId || !message) return response(400, { error: "A reply is required." });
+      if (parentReplyId) {
+        const [parent] = await sql`
+          SELECT id, post_id FROM post_replies WHERE id=${parentReplyId}
+        `;
+        if (!parent || parent.post_id !== postId) {
+          return response(400, { error: "The reply you are answering was not found." });
+        }
+        if ((await getReplyDepth(sql, parentReplyId)) >= 8) {
+          return response(400, { error: "This conversation has reached its maximum reply depth." });
+        }
+      }
       const [reply] = await sql`
-        INSERT INTO post_replies (post_id, name, message)
-        VALUES (${postId}, ${name}, ${message})
+        INSERT INTO post_replies (post_id, name, message, parent_reply_id)
+        VALUES (${postId}, ${name}, ${message}, ${parentReplyId})
         RETURNING *
       `;
       return response(201, { reply });
@@ -115,6 +141,9 @@ export async function handler(event) {
         SELECT id, post_id FROM post_replies WHERE id=${parentReplyId}
       `;
       if (!parent) return response(404, { error: "Visitor reply not found." });
+      if ((await getReplyDepth(sql, parentReplyId)) >= 8) {
+        return response(400, { error: "This conversation has reached its maximum reply depth." });
+      }
       const adminName = cleanText(process.env.POSTS_ADMIN_NAME, 60) || "Aenuka";
       const [reply] = await sql`
         INSERT INTO post_replies (post_id, name, message, parent_reply_id, is_admin)
