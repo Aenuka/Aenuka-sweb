@@ -15,7 +15,7 @@ import {
   Bold, Italic, Heading1, Heading2, Table2, ImagePlus, Send, MessageCircle,
   LoaderCircle, Pencil, Trash2, LockKeyhole, Plus, X, LogOut, ShieldCheck, Mail, KeyRound,
   ChevronDown, ChevronUp, BookOpen, Code2, Youtube, AlignLeft, AlignCenter, AlignRight,
-  List, ListOrdered,
+  List, ListOrdered, Search,
 } from "lucide-react";
 
 const endpoint = "/.netlify/functions/posts";
@@ -180,6 +180,18 @@ function CollapsiblePostContent({ post, onOpen }) {
 
 function FullPost({ post, onBack, onReplyAdded }) {
   const sanitized = useMemo(() => preparePostHtml(post.content), [post.content]);
+  const titleRef = useRef(null);
+  function positionAtTitle() {
+    if (!titleRef.current) return;
+    window.scrollTo(0, Math.max(0, titleRef.current.offsetTop - 76));
+  }
+  useEffect(() => {
+    const firstFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(positionAtTitle);
+    });
+    return () => window.cancelAnimationFrame(firstFrame);
+  }, [post.id]);
+
   return <main className="page-enter min-h-screen bg-white pt-14">
     <article>
       <div className="fixed bottom-5 left-5 z-50 md:bottom-8 md:left-8">
@@ -187,8 +199,8 @@ function FullPost({ post, onBack, onReplyAdded }) {
           <ChevronDown className="rotate-90" size={16}/> All posts
         </button>
       </div>
-      {post.image_url && <div className="shell max-w-[1280px] pt-8 md:pt-12"><img src={post.image_url} alt="" className="max-h-[680px] w-full rounded-[1.5rem] bg-mist object-cover md:rounded-[2rem]"/></div>}
-      <header className="shell max-w-[1280px] pb-8 pt-12 md:pb-12 md:pt-16">
+      {post.image_url && <div className="shell max-w-[1280px] pt-8 md:pt-12"><img src={post.image_url} alt="" onLoad={positionAtTitle} className="max-h-[680px] w-full rounded-[1.5rem] bg-mist object-cover md:rounded-[2rem]"/></div>}
+      <header ref={titleRef} className="shell max-w-[1280px] scroll-mt-20 pb-8 pt-12 md:pb-12 md:pt-16">
         <time className="text-xs font-medium uppercase tracking-[.12em] text-black/35">{friendlyDate(post.created_at)}</time>
         <h1 className="mt-4 text-[clamp(2.25rem,5vw,4.25rem)] font-semibold leading-[1.02] tracking-[-.045em]">{post.title}</h1>
       </header>
@@ -229,6 +241,7 @@ function CommentsSection({ post, onAdded }) {
 export function Posts() {
   const [posts, setPosts] = useState([]);
   const [selectedPostId, setSelectedPostId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [state, setState] = useState({ loading: true, error: "" });
   useEffect(() => {
     getPosts().then((items) => {
@@ -243,11 +256,22 @@ export function Posts() {
     ));
   }
 
+  const filteredPosts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return posts;
+    return posts.filter((post) => {
+      const element = document.createElement("div");
+      element.innerHTML = DOMPurify.sanitize(post.content);
+      const content = element.textContent || "";
+      return `${post.title} ${content}`.toLowerCase().includes(query);
+    });
+  }, [posts, searchQuery]);
+
   const selectedPost = posts.find((post) => post.id === selectedPostId);
   if (selectedPost) {
     return <FullPost post={selectedPost} onBack={() => {
       setSelectedPostId(null);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     }} onReplyAdded={(reply) => addReply(selectedPost.id, reply)}/>;
   }
 
@@ -260,6 +284,11 @@ export function Posts() {
       </p>
     </section>
     <section className="shell max-w-[720px] pb-24">
+      <label className="relative mx-auto mb-8 block max-w-lg">
+        <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={16}/>
+        <input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="post-search w-full py-3 pl-10 pr-11 text-sm" placeholder="Search posts" aria-label="Search posts by title or content"/>
+        {searchQuery && <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-black/30 transition hover:bg-black/[.06] hover:text-black/60" aria-label="Clear search"><X size={14}/></button>}
+      </label>
       {state.loading && <div className="flex justify-center py-20"><LoaderCircle className="animate-spin text-blue"/></div>}
       {state.error && <div className="rounded-2xl bg-white p-8 text-center text-red-600">{state.error}</div>}
       {!state.loading && !state.error && posts.length === 0 && <div className="rounded-[2rem] bg-white px-7 py-20 text-center">
@@ -267,15 +296,19 @@ export function Posts() {
         <h2 className="mt-5 text-2xl font-semibold tracking-tight">Nothing posted yet</h2>
         <p className="mt-2 text-black/45">The first update will appear here.</p>
       </div>}
+      {!state.loading && !state.error && posts.length > 0 && filteredPosts.length === 0 && <div className="rounded-[2rem] bg-white px-7 py-16 text-center">
+        <Search className="mx-auto text-black/20" size={34}/>
+        <h2 className="mt-4 text-xl font-semibold">No matching posts</h2>
+        <p className="mt-2 text-sm text-black/45">Try a different title, keyword, or phrase.</p>
+      </div>}
       <div className="space-y-6">
-        {posts.map((post) => <article key={post.id} className="overflow-hidden rounded-[2rem] bg-white shadow-sm shadow-black/[.03]">
+        {filteredPosts.map((post) => <article key={post.id} className="overflow-hidden rounded-[2rem] bg-white shadow-sm shadow-black/[.03]">
           {post.image_url && <img src={post.image_url} alt="" className="max-h-[360px] w-full bg-black/[.02] object-cover" />}
           <div className="p-5 md:p-7">
             <time className="text-xs font-medium uppercase tracking-[.12em] text-black/35">{friendlyDate(post.created_at)}</time>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-.035em] md:text-3xl">{post.title}</h2>
             <CollapsiblePostContent post={post} onOpen={() => {
               setSelectedPostId(post.id);
-              window.scrollTo({ top: 0, behavior: "smooth" });
             }}/>
             <CommentsSection post={post} onAdded={(reply) => addReply(post.id, reply)}/>
           </div>
