@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DOMPurify from "dompurify";
 import { useNavigate } from "react-router-dom";
 import {
   Bold, Italic, Heading1, Heading2, Table2, ImagePlus, Send, MessageCircle,
   LoaderCircle, Pencil, Trash2, LockKeyhole, Plus, X, LogOut, ShieldCheck, Mail, KeyRound,
+  ChevronDown, ChevronUp, BookOpen,
 } from "lucide-react";
 
 const endpoint = "/.netlify/functions/posts";
@@ -97,6 +98,61 @@ function ReplyThread({ reply, replies, postId, onAdded, depth = 0 }) {
   </div>;
 }
 
+function CollapsiblePostContent({ content }) {
+  const [expanded, setExpanded] = useState(false);
+  const sanitized = useMemo(() => DOMPurify.sanitize(content), [content]);
+  const plainText = useMemo(() => {
+    const element = document.createElement("div");
+    element.innerHTML = sanitized;
+    return (element.textContent || "").replace(/\s+/g, " ").trim();
+  }, [sanitized]);
+  const isLong = plainText.length > 280;
+
+  if (!isLong) {
+    return <div className="rich-content mt-6" dangerouslySetInnerHTML={{ __html: sanitized }} />;
+  }
+
+  return <div className="mt-6">
+    {expanded
+      ? <div className="rich-content" dangerouslySetInnerHTML={{ __html: sanitized }} />
+      : <div className="relative overflow-hidden rounded-2xl bg-mist/70 px-5 py-4">
+          <p className="line-clamp-3 leading-relaxed text-black/60">{plainText}</p>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-mist to-transparent"/>
+        </div>}
+    <button type="button" aria-expanded={expanded} onClick={() => setExpanded((open) => !open)} className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue/10 px-4 py-2.5 text-sm font-semibold text-blue transition hover:bg-blue/15">
+      {expanded ? <ChevronUp size={16}/> : <BookOpen size={16}/>}
+      {expanded ? "Show less" : "Read full post"}
+      {!expanded && <ChevronDown size={15}/>}
+    </button>
+  </div>;
+}
+
+function CommentsSection({ post, onAdded }) {
+  const [open, setOpen] = useState(false);
+  const count = post.replies?.length || 0;
+
+  return <section className="mt-8 border-t pt-5" aria-label={`Comments for ${post.title}`}>
+    <button type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)} className="group flex w-full items-center justify-between gap-4 rounded-2xl px-1 py-1 text-left">
+      <span className="flex items-center gap-3">
+        <span className={`flex h-11 w-11 items-center justify-center rounded-full transition ${open ? "bg-blue text-white" : "bg-mist text-black/55 group-hover:bg-blue/10 group-hover:text-blue"}`}>
+          <MessageCircle size={19}/>
+        </span>
+        <span>
+          <span className="block text-sm font-semibold">{open ? "Comments" : count ? `View ${count} ${count === 1 ? "comment" : "comments"}` : "Add a comment"}</span>
+          <span className="mt-0.5 block text-xs text-black/35">{open ? "Conversation is open" : "Open the conversation"}</span>
+        </span>
+      </span>
+      <ChevronDown className={`text-black/30 transition-transform duration-300 ${open ? "rotate-180" : ""}`} size={19}/>
+    </button>
+    {open && <div className="mt-5 rounded-[1.5rem] bg-black/[.018] p-4 md:p-5">
+      {count > 0 ? <div className="space-y-3">
+        {post.replies.filter((reply) => !reply.parent_reply_id).map((reply) => <ReplyThread key={reply.id} reply={reply} replies={post.replies} postId={post.id} onAdded={onAdded}/>)}
+      </div> : <p className="py-3 text-center text-sm text-black/40">No comments yet. Start the conversation.</p>}
+      <ReplyForm postId={post.id} onAdded={onAdded}/>
+    </div>}
+  </section>;
+}
+
 export function Posts() {
   const [posts, setPosts] = useState([]);
   const [state, setState] = useState({ loading: true, error: "" });
@@ -135,14 +191,8 @@ export function Posts() {
           <div className="p-6 md:p-9">
             <time className="text-xs font-medium uppercase tracking-[.12em] text-black/35">{friendlyDate(post.created_at)}</time>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-.035em] md:text-4xl">{post.title}</h2>
-            <div className="rich-content mt-6" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }} />
-            <div className="mt-8 flex items-center gap-2 text-sm font-medium text-black/45">
-              <MessageCircle size={17}/> {post.replies?.length || 0} {(post.replies?.length || 0) === 1 ? "reply" : "replies"}
-            </div>
-            {post.replies?.length > 0 && <div className="mt-4 space-y-3">
-              {post.replies.filter((reply) => !reply.parent_reply_id).map((reply) => <ReplyThread key={reply.id} reply={reply} replies={post.replies} postId={post.id} onAdded={(newReply) => addReply(post.id, newReply)}/>)}
-            </div>}
-            <ReplyForm postId={post.id} onAdded={(reply) => addReply(post.id, reply)}/>
+            <CollapsiblePostContent content={post.content}/>
+            <CommentsSection post={post} onAdded={(reply) => addReply(post.id, reply)}/>
           </div>
         </article>)}
       </div>
