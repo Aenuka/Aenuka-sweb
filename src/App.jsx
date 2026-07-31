@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Routes, Route, NavLink, Link, useLocation } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Github, Linkedin, Instagram, Menu, X, Code2, Server, Database, Boxes, Palette, CheckCircle2, Send, FileQuestion } from "lucide-react";
 import { getSeo, normalizePath } from "./seo";
@@ -194,8 +194,19 @@ function NotFound() {
   </main>;
 }
 
-function ScrollTop() { const {pathname}=useLocation(); useEffect(()=>window.scrollTo(0,0),[pathname]); return null; }
+function ScrollTop() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => window.scrollTo(0, 0), [pathname]);
+  return null;
+}
+
+function RouteProgress() {
+  const { pathname } = useLocation();
+  return <div key={pathname} className="route-progress" aria-hidden="true"/>;
+}
+
 export default function App() {
   const location = useLocation();
-  return <><Seo/><ScrollTop/><Header/><Routes location={location} key={location.pathname}><Route path="/" element={<Home/>}/><Route path="/about" element={<About/>}/><Route path="/skills" element={<Skills/>}/><Route path="/projects" element={<Projects/>}/><Route path="/posts" element={<Posts/>}/><Route path="/admin" element={<AdminLogin/>}/><Route path="/admin/dashboard" element={<AdminPosts/>}/><Route path="/contact" element={<Contact/>}/><Route path="*" element={<NotFound/>}/></Routes><Footer/></>;
+  const isAdminDashboard = location.pathname === "/admin/dashboard";
+  return <><Seo/><ScrollTop/><RouteProgress/>{!isAdminDashboard && <Header/>}<Routes location={location} key={location.pathname}><Route path="/" element={<Home/>}/><Route path="/about" element={<About/>}/><Route path="/skills" element={<Skills/>}/><Route path="/projects" element={<Projects/>}/><Route path="/posts" element={<Posts/>}/><Route path="/admin" element={<AdminLogin/>}/><Route path="/admin/dashboard" element={<AdminPosts/>}/><Route path="/contact" element={<Contact/>}/><Route path="*" element={<NotFound/>}/></Routes>{!isAdminDashboard && <Footer/>}</>;
 }

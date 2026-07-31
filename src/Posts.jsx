@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import DOMPurify from "dompurify";
 import { useNavigate } from "react-router-dom";
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import python from "highlight.js/lib/languages/python";
+import java from "highlight.js/lib/languages/java";
+import xml from "highlight.js/lib/languages/xml";
+import css from "highlight.js/lib/languages/css";
+import json from "highlight.js/lib/languages/json";
+import bash from "highlight.js/lib/languages/bash";
+import sql from "highlight.js/lib/languages/sql";
 import {
   Bold, Italic, Heading1, Heading2, Table2, ImagePlus, Send, MessageCircle,
   LoaderCircle, Pencil, Trash2, LockKeyhole, Plus, X, LogOut, ShieldCheck, Mail, KeyRound,
-  ChevronDown, ChevronUp, BookOpen,
+  ChevronDown, ChevronUp, BookOpen, Code2, Youtube, AlignLeft, AlignCenter, AlignRight,
+  List, ListOrdered,
 } from "lucide-react";
 
 const endpoint = "/.netlify/functions/posts";
 const authEndpoint = "/.netlify/functions/admin-auth";
+
+Object.entries({ javascript, typescript, python, java, xml, css, json, bash, sql })
+  .forEach(([name, language]) => hljs.registerLanguage(name, language));
 
 function removeReplyBranch(replies, replyId) {
   const removed = new Set([replyId]);
@@ -27,6 +41,53 @@ function removeReplyBranch(replies, replyId) {
 
 function friendlyDate(date) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(date));
+}
+
+function preparePostHtml(content) {
+  const sanitized = DOMPurify.sanitize(content, {
+    ADD_TAGS: ["iframe"],
+    ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "loading", "referrerpolicy"],
+  });
+  const container = document.createElement("div");
+  container.innerHTML = sanitized;
+  container.querySelectorAll("iframe").forEach((iframe) => {
+    try {
+      const hostname = new URL(iframe.src).hostname;
+      if (!["www.youtube.com", "www.youtube-nocookie.com"].includes(hostname)) iframe.remove();
+    } catch {
+      iframe.remove();
+    }
+  });
+  container.querySelectorAll("pre code").forEach((code) => {
+    const result = hljs.highlightAuto(code.textContent || "");
+    code.innerHTML = result.value;
+    code.classList.add("hljs");
+    if (result.language) code.dataset.language = result.language;
+  });
+  return container.innerHTML;
+}
+
+function getYouTubeId(value) {
+  try {
+    const url = new URL(String(value).trim());
+    const hostname = url.hostname.replace(/^www\./, "");
+    if (hostname === "youtu.be") return url.pathname.split("/").filter(Boolean)[0] || "";
+    if (!["youtube.com", "m.youtube.com"].includes(hostname)) return "";
+    if (url.pathname === "/watch") return url.searchParams.get("v") || "";
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (["shorts", "embed", "live"].includes(parts[0])) return parts[1] || "";
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 async function getPosts() {
@@ -98,33 +159,45 @@ function ReplyThread({ reply, replies, postId, onAdded, depth = 0 }) {
   </div>;
 }
 
-function CollapsiblePostContent({ content }) {
-  const [expanded, setExpanded] = useState(false);
-  const sanitized = useMemo(() => DOMPurify.sanitize(content), [content]);
+function CollapsiblePostContent({ post, onOpen }) {
+  const sanitized = useMemo(() => preparePostHtml(post.content), [post.content]);
   const plainText = useMemo(() => {
     const element = document.createElement("div");
     element.innerHTML = sanitized;
     return (element.textContent || "").replace(/\s+/g, " ").trim();
   }, [sanitized]);
-  const isLong = plainText.length > 280;
 
-  if (!isLong) {
-    return <div className="rich-content mt-6" dangerouslySetInnerHTML={{ __html: sanitized }} />;
-  }
-
-  return <div className="mt-6">
-    {expanded
-      ? <div className="rich-content" dangerouslySetInnerHTML={{ __html: sanitized }} />
-      : <div className="relative overflow-hidden rounded-2xl bg-mist/70 px-5 py-4">
-          <p className="line-clamp-3 leading-relaxed text-black/60">{plainText}</p>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-mist to-transparent"/>
-        </div>}
-    <button type="button" aria-expanded={expanded} onClick={() => setExpanded((open) => !open)} className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue/10 px-4 py-2.5 text-sm font-semibold text-blue transition hover:bg-blue/15">
-      {expanded ? <ChevronUp size={16}/> : <BookOpen size={16}/>}
-      {expanded ? "Show less" : "Read full post"}
-      {!expanded && <ChevronDown size={15}/>}
+  return <div className="mt-5">
+    <div className="relative overflow-hidden rounded-xl bg-mist/70 px-4 py-3.5">
+      <p className="line-clamp-3 text-sm leading-relaxed text-black/60">{plainText}</p>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-mist to-transparent"/>
+    </div>
+    <button type="button" onClick={onOpen} className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue/10 px-4 py-2 text-sm font-semibold text-blue transition hover:bg-blue/15">
+      <BookOpen size={16}/> View post
     </button>
   </div>;
+}
+
+function FullPost({ post, onBack, onReplyAdded }) {
+  const sanitized = useMemo(() => preparePostHtml(post.content), [post.content]);
+  return <main className="page-enter min-h-screen bg-white pt-14">
+    <article>
+      <div className="fixed bottom-5 left-5 z-50 md:bottom-8 md:left-8">
+        <button type="button" onClick={onBack} className="button-secondary border-black/10 bg-white px-4 py-2.5 text-sm shadow-xl shadow-black/15 backdrop-blur-xl hover:bg-white">
+          <ChevronDown className="rotate-90" size={16}/> All posts
+        </button>
+      </div>
+      {post.image_url && <div className="shell max-w-[1280px] pt-8 md:pt-12"><img src={post.image_url} alt="" className="max-h-[680px] w-full rounded-[1.5rem] bg-mist object-cover md:rounded-[2rem]"/></div>}
+      <header className="shell max-w-[1280px] pb-8 pt-12 md:pb-12 md:pt-16">
+        <time className="text-xs font-medium uppercase tracking-[.12em] text-black/35">{friendlyDate(post.created_at)}</time>
+        <h1 className="mt-4 text-[clamp(2.25rem,5vw,4.25rem)] font-semibold leading-[1.02] tracking-[-.045em]">{post.title}</h1>
+      </header>
+      <div className="shell max-w-[960px] pb-12 md:pb-20">
+        <div className="rich-content" dangerouslySetInnerHTML={{ __html: sanitized }}/>
+        <CommentsSection post={post} onAdded={onReplyAdded}/>
+      </div>
+    </article>
+  </main>;
 }
 
 function CommentsSection({ post, onAdded }) {
@@ -155,6 +228,7 @@ function CommentsSection({ post, onAdded }) {
 
 export function Posts() {
   const [posts, setPosts] = useState([]);
+  const [selectedPostId, setSelectedPostId] = useState(null);
   const [state, setState] = useState({ loading: true, error: "" });
   useEffect(() => {
     getPosts().then((items) => {
@@ -169,6 +243,14 @@ export function Posts() {
     ));
   }
 
+  const selectedPost = posts.find((post) => post.id === selectedPostId);
+  if (selectedPost) {
+    return <FullPost post={selectedPost} onBack={() => {
+      setSelectedPostId(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }} onReplyAdded={(reply) => addReply(selectedPost.id, reply)}/>;
+  }
+
   return <main className="page-enter min-h-screen bg-mist pt-14">
     <section className="shell py-20 text-center md:py-28">
       <p className="eyebrow">Notes & updates</p>
@@ -177,7 +259,7 @@ export function Posts() {
         Ideas, progress, and things worth sharing. Join the conversation—your name is optional.
       </p>
     </section>
-    <section className="shell max-w-[820px] pb-24">
+    <section className="shell max-w-[720px] pb-24">
       {state.loading && <div className="flex justify-center py-20"><LoaderCircle className="animate-spin text-blue"/></div>}
       {state.error && <div className="rounded-2xl bg-white p-8 text-center text-red-600">{state.error}</div>}
       {!state.loading && !state.error && posts.length === 0 && <div className="rounded-[2rem] bg-white px-7 py-20 text-center">
@@ -187,11 +269,14 @@ export function Posts() {
       </div>}
       <div className="space-y-6">
         {posts.map((post) => <article key={post.id} className="overflow-hidden rounded-[2rem] bg-white shadow-sm shadow-black/[.03]">
-          {post.image_url && <img src={post.image_url} alt="" className="max-h-[620px] w-full bg-black/[.02] object-cover" />}
-          <div className="p-6 md:p-9">
+          {post.image_url && <img src={post.image_url} alt="" className="max-h-[360px] w-full bg-black/[.02] object-cover" />}
+          <div className="p-5 md:p-7">
             <time className="text-xs font-medium uppercase tracking-[.12em] text-black/35">{friendlyDate(post.created_at)}</time>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-.035em] md:text-4xl">{post.title}</h2>
-            <CollapsiblePostContent content={post.content}/>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-.035em] md:text-3xl">{post.title}</h2>
+            <CollapsiblePostContent post={post} onOpen={() => {
+              setSelectedPostId(post.id);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}/>
             <CommentsSection post={post} onAdded={(reply) => addReply(post.id, reply)}/>
           </div>
         </article>)}
@@ -295,32 +380,558 @@ export function AdminLogin() {
 
 function RichEditor({ value, onChange }) {
   const ref = useRef(null);
+  const inlineImageInputRef = useRef(null);
+  const activeCellRef = useRef(null);
+  const activeBlockRef = useRef(null);
+  const activeCodeBlockRef = useRef(null);
+  const activeSectionRef = useRef(null);
+  const activeVideoRef = useRef(null);
+  const activeImageRef = useRef(null);
+  const savedRangeRef = useRef(null);
+  const [tableBuilderOpen, setTableBuilderOpen] = useState(false);
+  const [youtubeBuilderOpen, setYoutubeBuilderOpen] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeError, setYoutubeError] = useState("");
+  const [inlineImageState, setInlineImageState] = useState({ uploading: false, error: "" });
+  const [tableSize, setTableSize] = useState({ rows: 3, columns: 3 });
+  const [inTable, setInTable] = useState(false);
+  const [inCodeBlock, setInCodeBlock] = useState(false);
+  const [inSection, setInSection] = useState(false);
+  const [inVideo, setInVideo] = useState(false);
+  const [inImage, setInImage] = useState(false);
+  const [mergeMode, setMergeMode] = useState(false);
+  const [mergeSelection, setMergeSelection] = useState([]);
+
   useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== value) ref.current.innerHTML = value;
+    if (!ref.current) return;
+    const copy = ref.current.cloneNode(true);
+    copy.querySelectorAll("[data-merge-selected]").forEach((cell) => cell.removeAttribute("data-merge-selected"));
+    if (copy.innerHTML !== value) ref.current.innerHTML = value;
   }, [value]);
+
+  function emitChange() {
+    if (!ref.current) return;
+    const copy = ref.current.cloneNode(true);
+    copy.querySelectorAll("[data-merge-selected]").forEach((cell) => cell.removeAttribute("data-merge-selected"));
+    onChange(copy.innerHTML);
+  }
 
   function command(name, option) {
     ref.current?.focus();
     document.execCommand(name, false, option);
-    onChange(ref.current?.innerHTML || "");
+    emitChange();
   }
+
+  function highlightEditorCode(code) {
+    if (!code) return;
+    const selection = window.getSelection();
+    let caretOffset = null;
+    if (selection?.rangeCount && code.contains(selection.anchorNode)) {
+      const beforeCaret = document.createRange();
+      beforeCaret.selectNodeContents(code);
+      beforeCaret.setEnd(selection.anchorNode, selection.anchorOffset);
+      caretOffset = beforeCaret.toString().length;
+    }
+    const result = hljs.highlightAuto(code.textContent || "");
+    code.innerHTML = result.value;
+    code.classList.add("hljs");
+    if (result.language) code.dataset.language = result.language;
+
+    if (caretOffset !== null) {
+      const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+      let remaining = caretOffset;
+      let textNode = walker.nextNode();
+      while (textNode && remaining > textNode.textContent.length) {
+        remaining -= textNode.textContent.length;
+        textNode = walker.nextNode();
+      }
+      if (textNode) {
+        const range = document.createRange();
+        range.setStart(textNode, Math.min(remaining, textNode.textContent.length));
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
+  }
+
+  function insertCodeBlock() {
+    ref.current?.focus();
+    const selection = window.getSelection()?.toString() || "";
+    const code = selection || "// Write your code here";
+    const escapedCode = code
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    command("insertHTML", `<pre><code>${escapedCode}</code></pre><p><br></p>`);
+    const insertedCode = [...ref.current.querySelectorAll("pre code")].at(-1);
+    highlightEditorCode(insertedCode);
+    emitChange();
+  }
+
+  function insertSection() {
+    command("insertHTML", "<hr><h2>New section</h2><p>Start writing this section…</p>");
+  }
+
+  function alignContent(alignment) {
+    const selection = window.getSelection();
+    const blockSelector = "p, h2, h3, figure, pre, table, ul, ol";
+    let blocks = [];
+    if (selection?.rangeCount && ref.current?.contains(selection.anchorNode)) {
+      const range = selection.getRangeAt(0);
+      const anchorElement = selection.anchorNode?.nodeType === Node.ELEMENT_NODE
+        ? selection.anchorNode
+        : selection.anchorNode?.parentElement;
+      const anchorBlock = anchorElement?.closest?.(blockSelector);
+      if (range.collapsed && anchorBlock) {
+        blocks = [anchorBlock];
+      } else {
+        blocks = [...ref.current.querySelectorAll(blockSelector)].filter((block) => {
+          try {
+            return range.intersectsNode(block);
+          } catch {
+            return false;
+          }
+        });
+      }
+    }
+    if (!blocks.length && activeBlockRef.current) blocks = [activeBlockRef.current];
+    blocks.forEach((block) => block.setAttribute("data-align", alignment));
+    emitChange();
+    ref.current?.focus();
+  }
+
+  function insertYouTubeVideo() {
+    const videoId = getYouTubeId(youtubeUrl);
+    if (!/^[\w-]{6,20}$/.test(videoId)) {
+      setYoutubeError("Enter a valid YouTube video link.");
+      return;
+    }
+    ref.current?.focus();
+    if (savedRangeRef.current) {
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(savedRangeRef.current);
+    }
+    command("insertHTML", `<figure><iframe src="https://www.youtube-nocookie.com/embed/${videoId}" title="YouTube video player" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></figure><p><br></p>`);
+    setYoutubeUrl("");
+    setYoutubeError("");
+    setYoutubeBuilderOpen(false);
+  }
+
+  async function insertInlineImages(event) {
+    const files = [...(event.target.files || [])];
+    event.target.value = "";
+    if (!files.length) return;
+    if (files.some((file) => file.size > 4 * 1024 * 1024)) {
+      setInlineImageState({ uploading: false, error: "Each image must be smaller than 4 MB." });
+      return;
+    }
+    setInlineImageState({ uploading: true, error: "" });
+    try {
+      const uploadedImages = await Promise.all(files.map(async (file) => {
+        const image = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error(`Could not read ${file.name}.`));
+          reader.readAsDataURL(file);
+        });
+        const response = await fetch("/.netlify/functions/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || `Could not upload ${file.name}.`);
+        return { url: data.url, name: file.name.replace(/\.[^.]+$/, "") };
+      }));
+      ref.current?.focus();
+      if (savedRangeRef.current) {
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(savedRangeRef.current);
+      }
+      const imageHtml = uploadedImages.map(({ url, name }) =>
+        `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" loading="lazy"><figcaption>Image caption</figcaption></figure>`
+      ).join("");
+      command("insertHTML", `${imageHtml}<p><br></p>`);
+      setInlineImageState({ uploading: false, error: "" });
+    } catch (error) {
+      setInlineImageState({ uploading: false, error: error.message });
+    }
+  }
+
+  function insertTable() {
+    const rows = Math.min(12, Math.max(1, Number(tableSize.rows) || 1));
+    const columns = Math.min(8, Math.max(1, Number(tableSize.columns) || 1));
+    const body = Array.from({ length: rows }, (_, rowIndex) => {
+      const tag = rowIndex === 0 ? "th" : "td";
+      return `<tr>${Array.from({ length: columns }, (_, columnIndex) =>
+        `<${tag}>${rowIndex === 0 ? `Heading ${columnIndex + 1}` : "Cell"}</${tag}>`
+      ).join("")}</tr>`;
+    }).join("");
+    ref.current?.focus();
+    if (savedRangeRef.current) {
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(savedRangeRef.current);
+    }
+    command("insertHTML", `<table><tbody>${body}</tbody></table><p><br></p>`);
+    setTableBuilderOpen(false);
+  }
+
+  function clearMergeSelection() {
+    mergeSelection.forEach((cell) => cell.removeAttribute("data-merge-selected"));
+    setMergeSelection([]);
+  }
+
+  function selectMergeRange(cell) {
+    if (!mergeSelection.length) {
+      cell.setAttribute("data-merge-selected", "true");
+      setMergeSelection([cell]);
+      return;
+    }
+    const firstCell = mergeSelection[0];
+    const table = firstCell.closest("table");
+    if (table !== cell.closest("table")) {
+      clearMergeSelection();
+      cell.setAttribute("data-merge-selected", "true");
+      setMergeSelection([cell]);
+      return;
+    }
+    mergeSelection.forEach((item) => item.removeAttribute("data-merge-selected"));
+    const rows = [...table.rows];
+    const firstRow = rows.indexOf(firstCell.parentElement);
+    const lastRow = rows.indexOf(cell.parentElement);
+    const firstColumn = [...firstCell.parentElement.cells].indexOf(firstCell);
+    const lastColumn = [...cell.parentElement.cells].indexOf(cell);
+    const selected = [];
+    for (let rowIndex = Math.min(firstRow, lastRow); rowIndex <= Math.max(firstRow, lastRow); rowIndex += 1) {
+      for (let columnIndex = Math.min(firstColumn, lastColumn); columnIndex <= Math.max(firstColumn, lastColumn); columnIndex += 1) {
+        const selectedCell = rows[rowIndex]?.cells[columnIndex];
+        if (selectedCell) {
+          selectedCell.setAttribute("data-merge-selected", "true");
+          selected.push(selectedCell);
+        }
+      }
+    }
+    setMergeSelection(selected);
+  }
+
+  function updateActiveCell(event) {
+    const selection = window.getSelection();
+    if (selection?.rangeCount && ref.current?.contains(selection.anchorNode)) {
+      savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+    }
+    const node = event?.type === "click" ? event.target : selection?.anchorNode;
+    const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+    const cell = element?.closest?.("td, th");
+    const codeBlock = element?.closest?.("pre");
+    const video = element?.closest?.("iframe") || element?.closest?.("figure")?.querySelector(":scope > iframe");
+    const image = element?.closest?.("img");
+    const activeBlock = element?.closest?.("p, h2, h3, figure, pre, table, ul, ol");
+    let topLevelElement = element;
+    while (topLevelElement?.parentElement && topLevelElement.parentElement !== ref.current) {
+      topLevelElement = topLevelElement.parentElement;
+    }
+    let sectionDivider = topLevelElement?.tagName === "HR" ? topLevelElement : topLevelElement?.previousElementSibling;
+    while (sectionDivider && sectionDivider.tagName !== "HR") {
+      sectionDivider = sectionDivider.previousElementSibling;
+    }
+    if (cell && ref.current?.contains(cell)) {
+      activeCellRef.current = cell;
+      setInTable(true);
+      if (mergeMode && event?.type === "click") selectMergeRange(cell);
+    } else {
+      activeCellRef.current = null;
+      setInTable(false);
+    }
+    if (codeBlock && ref.current?.contains(codeBlock)) {
+      activeCodeBlockRef.current = codeBlock;
+      setInCodeBlock(true);
+    } else {
+      activeCodeBlockRef.current = null;
+      setInCodeBlock(false);
+    }
+    if (sectionDivider && ref.current?.contains(sectionDivider)) {
+      activeSectionRef.current = sectionDivider;
+      setInSection(true);
+    } else {
+      activeSectionRef.current = null;
+      setInSection(false);
+    }
+    if (video && ref.current?.contains(video)) {
+      activeVideoRef.current = video;
+      setInVideo(true);
+    } else {
+      activeVideoRef.current = null;
+      setInVideo(false);
+    }
+    if (image && ref.current?.contains(image)) {
+      activeImageRef.current = image;
+      setInImage(true);
+    } else {
+      activeImageRef.current = null;
+      setInImage(false);
+    }
+    if (activeBlock && ref.current?.contains(activeBlock)) {
+      activeBlockRef.current = activeBlock;
+    }
+  }
+
+  function addRow(position) {
+    const cell = activeCellRef.current;
+    const row = cell?.closest("tr");
+    if (!row) return;
+    const table = row.closest("table");
+    const columnCount = Math.max(...[...table.rows].map((item) =>
+      [...item.cells].reduce((count, item) => count + (item.colSpan || 1), 0)
+    ));
+    const newRow = document.createElement("tr");
+    for (let index = 0; index < columnCount; index += 1) {
+      const newCell = document.createElement("td");
+      newCell.textContent = "Cell";
+      newRow.appendChild(newCell);
+    }
+    if (position === "before") row.before(newRow);
+    else row.after(newRow);
+    clearMergeSelection();
+    emitChange();
+  }
+
+  function addColumn(position) {
+    const cell = activeCellRef.current;
+    const row = cell?.closest("tr");
+    const table = cell?.closest("table");
+    if (!row || !table) return;
+    const columnIndex = [...row.cells].indexOf(cell);
+    [...table.rows].forEach((tableRow, rowIndex) => {
+      const newCell = document.createElement(rowIndex === 0 ? "th" : "td");
+      newCell.textContent = rowIndex === 0 ? "Heading" : "Cell";
+      const targetCell = tableRow.cells[Math.min(columnIndex, tableRow.cells.length - 1)];
+      if (position === "before") targetCell?.before(newCell);
+      else targetCell?.after(newCell);
+    });
+    clearMergeSelection();
+    emitChange();
+  }
+
+  function mergeCells() {
+    if (mergeSelection.length < 2) return;
+    const selectedCells = [...mergeSelection];
+    const table = selectedCells[0].closest("table");
+    const rows = [...table.rows];
+    const selectedRows = selectedCells.map((cell) => rows.indexOf(cell.parentElement));
+    const selectedColumns = selectedCells.map((cell) => [...cell.parentElement.cells].indexOf(cell));
+    const rowMin = Math.min(...selectedRows);
+    const rowMax = Math.max(...selectedRows);
+    const columnMin = Math.min(...selectedColumns);
+    const columnMax = Math.max(...selectedColumns);
+    const firstCell = selectedCells[0];
+    const contents = selectedCells.map((item) => item.innerHTML).filter((item) => item && item !== "<br>");
+    firstCell.innerHTML = contents.join("<br>");
+    firstCell.rowSpan = rowMax - rowMin + 1;
+    firstCell.colSpan = columnMax - columnMin + 1;
+    selectedCells.slice(1).forEach((item) => item.remove());
+    firstCell.removeAttribute("data-merge-selected");
+    activeCellRef.current = firstCell;
+    setMergeSelection([]);
+    setMergeMode(false);
+    emitChange();
+  }
+
+  function toggleMergeMode() {
+    if (mergeMode) {
+      clearMergeSelection();
+      setMergeMode(false);
+    } else {
+      setMergeMode(true);
+      clearMergeSelection();
+    }
+  }
+
+  function deleteTable() {
+    const table = activeCellRef.current?.closest("table");
+    if (!table || !window.confirm("Delete this entire table?")) return;
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "<br>";
+    table.replaceWith(paragraph);
+    activeCellRef.current = null;
+    setInTable(false);
+    setMergeMode(false);
+    setMergeSelection([]);
+    emitChange();
+  }
+
+  function deleteCodeBlock() {
+    const codeBlock = activeCodeBlockRef.current;
+    if (!codeBlock || !window.confirm("Delete this entire code block?")) return;
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "<br>";
+    codeBlock.replaceWith(paragraph);
+    activeCodeBlockRef.current = null;
+    setInCodeBlock(false);
+    emitChange();
+  }
+
+  function deleteSection() {
+    const divider = activeSectionRef.current;
+    if (!divider || !window.confirm("Delete this section and all of its content?")) return;
+    let node = divider;
+    while (node) {
+      const nextNode = node.nextElementSibling;
+      node.remove();
+      if (nextNode?.tagName === "HR") break;
+      node = nextNode;
+    }
+    if (!ref.current.children.length) {
+      const paragraph = document.createElement("p");
+      paragraph.innerHTML = "<br>";
+      ref.current.appendChild(paragraph);
+    }
+    activeSectionRef.current = null;
+    setInSection(false);
+    setInTable(false);
+    setInCodeBlock(false);
+    emitChange();
+  }
+
+  function deleteVideo() {
+    const video = activeVideoRef.current;
+    if (!video || !window.confirm("Delete this embedded video?")) return;
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "<br>";
+    const container = video.parentElement?.tagName === "FIGURE" ? video.parentElement : video;
+    container.replaceWith(paragraph);
+    activeVideoRef.current = null;
+    setInVideo(false);
+    emitChange();
+  }
+
+  function resizeImage(size) {
+    const image = activeImageRef.current;
+    if (!image) return;
+    const container = image.parentElement?.tagName === "FIGURE" ? image.parentElement : image;
+    container.setAttribute("data-size", size);
+    emitChange();
+  }
+
   const controls = [
     [Bold, "Bold", () => command("bold")],
     [Italic, "Italic", () => command("italic")],
     [Heading1, "Heading", () => command("formatBlock", "h2")],
     [Heading2, "Subheading", () => command("formatBlock", "h3")],
-    [Table2, "Table", () => command("insertHTML", "<table><tbody><tr><th>Heading</th><th>Heading</th></tr><tr><td>Cell</td><td>Cell</td></tr></tbody></table><p><br></p>")],
+    [AlignLeft, "Align left", () => alignContent("left")],
+    [AlignCenter, "Align center", () => alignContent("center")],
+    [AlignRight, "Align right", () => alignContent("right")],
+    [List, "Bullet list", () => command("insertUnorderedList")],
+    [ListOrdered, "Ordered list", () => command("insertOrderedList")],
+    [BookOpen, "New section", insertSection],
+    [Code2, "Code block", insertCodeBlock],
   ];
-  return <div className="overflow-hidden rounded-2xl border bg-white focus-within:border-blue focus-within:ring-1 focus-within:ring-blue">
+  return <div className="rich-editor-shell">
+    <div className="editor-toolbar-sticky sticky top-0 z-30 overflow-hidden rounded-t-2xl border bg-white/95 backdrop-blur-xl">
     <div className="flex flex-wrap gap-1 border-b bg-mist/70 p-2">
       {controls.map(([Icon, label, action]) => <button type="button" key={label} onMouseDown={(event) => event.preventDefault()} onClick={action} className="editor-tool" title={label} aria-label={label}><Icon size={17}/><span>{label}</span></button>)}
+      <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => {
+        updateActiveCell();
+        setTableBuilderOpen((open) => !open);
+        setYoutubeBuilderOpen(false);
+      }} className="editor-tool" aria-expanded={tableBuilderOpen}>
+        <Table2 size={17}/><span>Table</span>
+      </button>
+      <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => {
+        updateActiveCell();
+        setYoutubeBuilderOpen((open) => !open);
+        setTableBuilderOpen(false);
+        setYoutubeError("");
+      }} className="editor-tool" aria-expanded={youtubeBuilderOpen}>
+        <Youtube size={17}/><span>YouTube</span>
+      </button>
+      <button type="button" disabled={inlineImageState.uploading} onMouseDown={(event) => event.preventDefault()} onClick={() => {
+        updateActiveCell();
+        inlineImageInputRef.current?.click();
+      }} className="editor-tool disabled:opacity-50">
+        {inlineImageState.uploading ? <LoaderCircle className="animate-spin" size={17}/> : <ImagePlus size={17}/>}
+        <span>{inlineImageState.uploading ? "Uploading…" : "Images"}</span>
+      </button>
+      <input ref={inlineImageInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={insertInlineImages} className="hidden"/>
+      {inTable && <>
+        <span className="mx-1 w-px bg-black/10" aria-hidden="true"/>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => addRow("before")} className="editor-tool"><Plus size={16}/><span>Row above</span></button>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => addRow("after")} className="editor-tool"><Plus size={16}/><span>Row below</span></button>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => addColumn("before")} className="editor-tool"><Plus size={16}/><span>Column left</span></button>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => addColumn("after")} className="editor-tool"><Plus size={16}/><span>Column right</span></button>
+        {!mergeMode && <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={toggleMergeMode} className="editor-tool"><Table2 size={16}/><span>Select cells to merge</span></button>}
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={deleteTable} className="editor-tool text-red-600 hover:text-red-700"><Trash2 size={16}/><span>Delete table</span></button>
+      </>}
+      {inCodeBlock && <>
+        <span className="mx-1 w-px bg-black/10" aria-hidden="true"/>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={deleteCodeBlock} className="editor-tool text-red-600 hover:text-red-700"><Trash2 size={16}/><span>Delete code block</span></button>
+      </>}
+      {inSection && <>
+        <span className="mx-1 w-px bg-black/10" aria-hidden="true"/>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={deleteSection} className="editor-tool text-red-600 hover:text-red-700"><Trash2 size={16}/><span>Delete section</span></button>
+      </>}
+      {inVideo && <>
+        <span className="mx-1 w-px bg-black/10" aria-hidden="true"/>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={deleteVideo} className="editor-tool text-red-600 hover:text-red-700"><Trash2 size={16}/><span>Delete video</span></button>
+      </>}
+      {inImage && <>
+        <span className="mx-1 w-px bg-black/10" aria-hidden="true"/>
+        <span className="self-center px-1 text-[10px] font-semibold uppercase tracking-wider text-black/35">Image size</span>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => resizeImage("small")} className="editor-tool"><span>Small</span></button>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => resizeImage("medium")} className="editor-tool"><span>Medium</span></button>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => resizeImage("full")} className="editor-tool"><span>Full</span></button>
+      </>}
     </div>
-    <div ref={ref} contentEditable suppressContentEditableWarning onInput={(event) => onChange(event.currentTarget.innerHTML)} data-placeholder="Share your story…" className="rich-editor min-h-[260px] px-5 py-4 outline-none" />
+    {inlineImageState.error && <div className="border-b bg-red-50 px-4 py-2 text-xs font-medium text-red-600">{inlineImageState.error}</div>}
+    {mergeMode && <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-blue/[.06] px-4 py-3">
+      <p className="text-xs font-medium text-black/60">
+        {mergeSelection.length < 2 ? "Click the first cell, then click the last cell." : `${mergeSelection.length} cells selected.`}
+      </p>
+      <div className="flex gap-2">
+        <button type="button" onClick={toggleMergeMode} className="rounded-full px-4 py-2 text-xs font-semibold text-black/50 hover:bg-black/5">Cancel</button>
+        <button type="button" disabled={mergeSelection.length < 2} onMouseDown={(event) => event.preventDefault()} onClick={mergeCells} className="button-primary px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40">Merge selected cells</button>
+      </div>
+    </div>}
+    {tableBuilderOpen && <div className="flex flex-wrap items-end gap-3 border-b bg-blue/[.035] px-4 py-3">
+      <label className="text-xs font-semibold text-black/60">Rows
+        <input type="number" min="1" max="12" value={tableSize.rows} onChange={(event) => setTableSize((size) => ({ ...size, rows: event.target.value }))} className="post-input mt-1 block w-20 py-2"/>
+      </label>
+      <label className="text-xs font-semibold text-black/60">Columns
+        <input type="number" min="1" max="8" value={tableSize.columns} onChange={(event) => setTableSize((size) => ({ ...size, columns: event.target.value }))} className="post-input mt-1 block w-20 py-2"/>
+      </label>
+      <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={insertTable} className="button-primary px-5 py-2.5"><Plus size={15}/>Insert table</button>
+    </div>}
+    {youtubeBuilderOpen && <div className="border-b bg-red-500/[.035] px-4 py-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="min-w-[240px] flex-1 text-xs font-semibold text-black/60">YouTube video link
+          <input type="url" value={youtubeUrl} onChange={(event) => { setYoutubeUrl(event.target.value); setYoutubeError(""); }} onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              insertYouTubeVideo();
+            }
+          }} className="post-input mt-1 block w-full py-2" placeholder="https://www.youtube.com/watch?v=…"/>
+        </label>
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={insertYouTubeVideo} className="button-primary bg-red-600 px-5 py-2.5 hover:bg-red-700"><Youtube size={16}/>Embed video</button>
+      </div>
+      {youtubeError && <p className="mt-2 text-xs font-medium text-red-600">{youtubeError}</p>}
+    </div>}
+    </div>
+    <div ref={ref} contentEditable suppressContentEditableWarning onInput={(event) => {
+      const target = event.target.nodeType === Node.ELEMENT_NODE ? event.target : event.target.parentElement;
+      const code = target?.closest?.("pre code");
+      if (code) highlightEditorCode(code);
+      emitChange();
+      updateActiveCell();
+    }} onClick={updateActiveCell} onKeyUp={updateActiveCell} data-placeholder="Share your story…" className="rich-editor -mt-px min-h-[260px] rounded-b-2xl border bg-white px-5 py-4 outline-none" />
   </div>;
 }
 
 export function AdminPosts() {
   const navigate = useNavigate();
+  const [adminView, setAdminView] = useState("create");
   const [authChecking, setAuthChecking] = useState(true);
   const [posts, setPosts] = useState([]);
   const [draft, setDraft] = useState(blankPost);
@@ -365,6 +976,7 @@ export function AdminPosts() {
     setEditingId(post.id);
     setDraft({ title: post.title, content: post.content, imageUrl: post.image_url || "" });
     setImagePreview(post.image_url || "");
+    setAdminView("create");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -416,6 +1028,7 @@ export function AdminPosts() {
         ? items.map((post) => post.id === editingId ? { ...post, ...data.post } : post)
         : [{ ...data.post, replies: [] }, ...items]);
       resetDraft();
+      setAdminView("manage");
       setState((old) => ({ ...old, saving: false, message: editingId ? "Post updated." : "Post published." }));
     } catch (error) {
       setState((old) => ({ ...old, saving: false, error: error.message }));
@@ -493,113 +1106,110 @@ export function AdminPosts() {
     navigate("/admin", { replace: true });
   }
 
-  if (authChecking) return <main className="flex min-h-screen items-center justify-center bg-mist pt-14"><LoaderCircle className="animate-spin text-blue"/></main>;
+  if (authChecking) return <main className="flex min-h-screen items-center justify-center bg-mist"><LoaderCircle className="animate-spin text-blue"/></main>;
 
-  return <main className="page-enter min-h-screen bg-mist pt-14">
-    <section className="shell grid gap-8 py-16 lg:grid-cols-[1.25fr_.75fr] lg:py-20">
-      <div>
-        <div className="mb-8 flex items-end justify-between gap-5">
-          <div>
-            <p className="eyebrow">Admin dashboard</p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-[-.045em] md:text-6xl">{editingId ? "Edit post" : "Create a post"}</h1>
+  const visitorReplies = posts.flatMap((post) => (post.replies || [])
+    .filter((reply) => !reply.is_admin)
+    .map((reply) => ({ post, reply })));
+  const navItems = [
+    ["create", Plus, editingId ? "Edit post" : "Create post"],
+    ["view", BookOpen, "View posts"],
+    ["manage", Pencil, "Manage posts"],
+    ["comments", MessageCircle, "Comments"],
+  ];
+
+  return <main className="page-enter min-h-screen bg-mist">
+    <div className="min-h-screen lg:grid lg:grid-cols-[88px_1fr]">
+      <aside className="border-b bg-ink text-white lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r lg:border-white/10">
+        <div className="flex h-full items-center px-3 py-4 lg:flex-col lg:py-6">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue text-white" title="Admin dashboard">
+            <ShieldCheck size={21}/>
+            <h1 className="sr-only">Admin dashboard</h1>
           </div>
-          <button type="button" onClick={logout} className="button-secondary shrink-0 px-4"><LogOut size={15}/> Log out</button>
-        </div>
-        <form onSubmit={save} className="rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
-          <label className="block text-sm font-semibold">Title
-            <input required maxLength="160" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="post-input mt-2 w-full text-lg" placeholder="Give your post a title"/>
-          </label>
-          <div className="mt-6">
-            <span className="text-sm font-semibold">Post content</span>
-            <div className="mt-2"><RichEditor value={draft.content} onChange={(content) => setDraft({ ...draft, content })}/></div>
+          <nav className="ml-3 flex gap-2 overflow-x-auto pb-1 lg:ml-0 lg:mt-8 lg:w-full lg:block lg:space-y-2" aria-label="Admin dashboard">
+            {navItems.map(([id, Icon, label]) => <button key={id} type="button" onClick={() => {
+              if (id === "create" && adminView !== "create" && editingId) resetDraft();
+              setAdminView(id);
+            }} className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition lg:mx-auto ${adminView === id ? "bg-white text-ink shadow-sm" : "text-white/55 hover:bg-white/10 hover:text-white"}`} title={label} aria-label={label}>
+              <Icon size={19}/><span className="sr-only">{label}</span>
+              {id === "manage" && posts.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-blue px-1 text-center text-[9px] leading-4 text-white">{posts.length}</span>}
+              {id === "comments" && visitorReplies.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-blue px-1 text-center text-[9px] leading-4 text-white">{visitorReplies.length}</span>}
+            </button>)}
+          </nav>
+          <div className="ml-auto flex gap-2 lg:ml-0 lg:mt-auto lg:block lg:w-full lg:space-y-2">
+            <button type="button" onClick={() => navigate("/posts")} className="flex h-11 w-11 items-center justify-center rounded-xl text-white/55 transition hover:bg-white/10 hover:text-white lg:mx-auto" title="Public posts" aria-label="Public posts"><BookOpen size={19}/><span className="sr-only">Public posts</span></button>
+            <button type="button" onClick={logout} className="flex h-11 w-11 items-center justify-center rounded-xl text-red-300 transition hover:bg-red-500/10 lg:mx-auto" title="Log out" aria-label="Log out"><LogOut size={19}/><span className="sr-only">Log out</span></button>
           </div>
-          <div className="mt-6">
-            <span className="text-sm font-semibold">Cover image</span>
-            {imagePreview ? <div className="relative mt-2 overflow-hidden rounded-2xl bg-mist">
-              <img src={imagePreview} alt="Post preview" className="max-h-80 w-full object-cover"/>
-              <button type="button" onClick={() => { setImagePreview(""); setDraft({ ...draft, imageUrl: "" }); }} className="absolute right-3 top-3 rounded-full bg-black/70 p-2 text-white" aria-label="Remove image"><X size={16}/></button>
-              {state.uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-medium text-white"><LoaderCircle className="mr-2 animate-spin" size={18}/> Uploading…</div>}
-            </div> : <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed py-10 text-sm font-medium text-black/50 transition hover:border-blue hover:text-blue">
-              <ImagePlus size={20}/> Choose an image (max 4 MB)
-              <input type="file" accept="image/*" onChange={upload} className="sr-only"/>
-            </label>}
-          </div>
-          {(state.error || state.message) && <p className={`mt-5 text-sm ${state.error ? "text-red-600" : "text-green-600"}`}>{state.error || state.message}</p>}
-          <div className="mt-7 flex flex-wrap gap-3">
-            <button disabled={state.saving || state.uploading} className="button-primary disabled:opacity-50">
-              {state.saving ? <LoaderCircle className="animate-spin" size={17}/> : editingId ? <Pencil size={16}/> : <Plus size={17}/>}
-              {state.saving ? "Saving…" : editingId ? "Save changes" : "Publish post"}
-            </button>
-            {editingId && <button type="button" onClick={resetDraft} className="button-secondary">Cancel</button>}
-          </div>
-        </form>
-      </div>
-      <aside className="lg:pt-28">
-        <div className="rounded-[2rem] bg-ink p-6 text-white md:p-8">
-          <div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Published</h2><span className="text-sm text-white/40">{posts.length}</span></div>
-          {state.loading ? <LoaderCircle className="mt-8 animate-spin text-white/50"/> : posts.length === 0 ? <p className="mt-8 text-sm text-white/45">Your published posts will appear here.</p> : <div className="mt-5 divide-y divide-white/10">
-            {posts.map((post) => <div key={post.id} className="py-5">
-              <p className="line-clamp-2 font-medium">{post.title}</p>
-              <p className="mt-1 text-xs text-white/35">{friendlyDate(post.created_at)}</p>
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => edit(post)} className="rounded-full bg-white/10 p-2.5 transition hover:bg-white/20" aria-label={`Edit ${post.title}`}><Pencil size={15}/></button>
-                <button onClick={() => remove(post.id)} className="rounded-full bg-red-500/15 p-2.5 text-red-300 transition hover:bg-red-500/25" aria-label={`Delete ${post.title}`}><Trash2 size={15}/></button>
-              </div>
-            </div>)}
-          </div>}
-        </div>
-        <div className="mt-5 rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Visitor replies</h2>
-            <MessageCircle className="text-black/25" size={20}/>
-          </div>
-          {commentState.error && <p className="mt-3 text-sm text-red-600">{commentState.error}</p>}
-          {posts.every((post) => !(post.replies || []).some((reply) => !reply.is_admin))
-            ? <p className="mt-6 text-sm text-black/40">Visitor replies will appear here.</p>
-            : <div className="mt-4 divide-y">
-              {posts.flatMap((post) => (post.replies || [])
-                .filter((reply) => !reply.is_admin)
-                .map((reply) => ({ post, reply }))
-              ).map(({ post, reply }) => <div key={reply.id} className="py-5">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-blue">{post.title}</p>
-                {reply.parent_reply_id && <p className="mt-1 text-[11px] text-black/35">Replying to {(post.replies || []).find((item) => item.id === reply.parent_reply_id)?.name || "a previous message"}</p>}
-                <div className="mt-2 flex items-baseline justify-between gap-3">
-                  <p className="text-sm font-semibold">{reply.name || "Anonymous"}</p>
-                  <time className="shrink-0 text-[10px] text-black/30">{friendlyDate(reply.created_at)}</time>
-                </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/60">{reply.message}</p>
-                {(post.replies || []).filter((child) => child.parent_reply_id === reply.id && child.is_admin).map((child) => <div key={child.id} className="mt-3 rounded-xl bg-blue/[.055] px-3 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-blue">Your reply</span>
-                    <time className="text-[10px] text-black/30">{friendlyDate(child.created_at)}</time>
-                  </div>
-                  <p className="mt-1 text-xs leading-relaxed text-black/60">{child.message}</p>
-                </div>)}
-                <div className="mt-3 flex gap-2">
-                  <button type="button" onClick={() => {
-                    setReplyingTo(replyingTo === reply.id ? null : reply.id);
-                    setAdminReply("");
-                    setCommentState({ busy: null, error: "" });
-                  }} className="inline-flex items-center gap-1.5 rounded-full bg-blue/10 px-3 py-2 text-xs font-semibold text-blue transition hover:bg-blue/15">
-                    <MessageCircle size={14}/> Reply
-                  </button>
-                  <button type="button" disabled={commentState.busy === reply.id} onClick={() => removeVisitorReply(post.id, reply.id)} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50">
-                    {commentState.busy === reply.id ? <LoaderCircle className="animate-spin" size={14}/> : <Trash2 size={14}/>} Delete
-                  </button>
-                </div>
-                {replyingTo === reply.id && <form onSubmit={(event) => answerVisitor(event, post.id, reply.id)} className="mt-3">
-                  <textarea required autoFocus maxLength="1000" rows="3" value={adminReply} onChange={(event) => setAdminReply(event.target.value)} className="post-input w-full resize-none text-sm" placeholder={`Reply to ${reply.name || "Anonymous"}…`}/>
-                  <div className="mt-2 flex gap-2">
-                    <button disabled={commentState.busy === reply.id} className="button-primary px-4 py-2 text-xs">
-                      {commentState.busy === reply.id ? <LoaderCircle className="animate-spin" size={14}/> : <Send size={14}/>} Send
-                    </button>
-                    <button type="button" onClick={() => { setReplyingTo(null); setAdminReply(""); }} className="button-secondary px-4 py-2 text-xs">Cancel</button>
-                  </div>
-                </form>}
-              </div>)}
-            </div>}
         </div>
       </aside>
-    </section>
+
+      <section className="min-w-0 px-5 py-8 md:px-8 lg:px-10 lg:py-12">
+        <div className="mx-auto max-w-[1080px]">
+          {(state.error || state.message) && <div className={`mb-6 rounded-2xl px-5 py-4 text-sm ${state.error ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>{state.error || state.message}</div>}
+
+          {adminView === "create" && <>
+            <div className="mb-8">
+              <p className="eyebrow">{editingId ? "Update published content" : "Write something new"}</p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-[-.045em] md:text-5xl">{editingId ? "Edit post" : "Create post"}</h2>
+            </div>
+            <form onSubmit={save} className="rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
+              <label className="block text-sm font-semibold">Title
+                <input required maxLength="160" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="post-input mt-2 w-full text-lg" placeholder="Give your post a title"/>
+              </label>
+              <div className="mt-6"><span className="text-sm font-semibold">Post content</span><div className="mt-2"><RichEditor value={draft.content} onChange={(content) => setDraft({ ...draft, content })}/></div></div>
+              <div className="mt-6">
+                <span className="text-sm font-semibold">Cover image</span>
+                {imagePreview ? <div className="relative mt-2 overflow-hidden rounded-2xl bg-mist">
+                  <img src={imagePreview} alt="Post preview" className="max-h-80 w-full object-cover"/>
+                  <button type="button" onClick={() => { setImagePreview(""); setDraft({ ...draft, imageUrl: "" }); }} className="absolute right-3 top-3 rounded-full bg-black/70 p-2 text-white" aria-label="Remove image"><X size={16}/></button>
+                  {state.uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-medium text-white"><LoaderCircle className="mr-2 animate-spin" size={18}/>Uploading…</div>}
+                </div> : <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed py-10 text-sm font-medium text-black/50 transition hover:border-blue hover:text-blue"><ImagePlus size={20}/>Choose an image (max 4 MB)<input type="file" accept="image/*" onChange={upload} className="sr-only"/></label>}
+              </div>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <button disabled={state.saving || state.uploading} className="button-primary disabled:opacity-50">{state.saving ? <LoaderCircle className="animate-spin" size={17}/> : editingId ? <Pencil size={16}/> : <Plus size={17}/>} {state.saving ? "Saving…" : editingId ? "Save changes" : "Publish post"}</button>
+                {editingId && <button type="button" onClick={() => { resetDraft(); setAdminView("manage"); }} className="button-secondary">Cancel</button>}
+              </div>
+            </form>
+          </>}
+
+          {adminView === "view" && <>
+            <div className="mb-8"><p className="eyebrow">Published content</p><h2 className="mt-3 text-4xl font-semibold tracking-[-.045em] md:text-5xl">View posts</h2></div>
+            {state.loading ? <LoaderCircle className="animate-spin text-blue"/> : posts.length === 0 ? <div className="rounded-[2rem] bg-white p-10 text-center text-black/40">No published posts yet.</div> : <div className="space-y-6">
+              {posts.map((post) => <article key={post.id} className="overflow-hidden rounded-[2rem] bg-white shadow-sm">
+                {post.image_url && <img src={post.image_url} alt="" className="max-h-[420px] w-full object-cover"/>}
+                <div className="p-6 md:p-8"><time className="text-xs uppercase tracking-wider text-black/35">{friendlyDate(post.created_at)}</time><h3 className="mt-2 text-3xl font-semibold tracking-tight">{post.title}</h3><div className="rich-content mt-5" dangerouslySetInnerHTML={{ __html: preparePostHtml(post.content) }}/></div>
+              </article>)}
+            </div>}
+          </>}
+
+          {adminView === "manage" && <>
+            <div className="mb-8 flex items-end justify-between gap-4"><div><p className="eyebrow">Published content</p><h2 className="mt-3 text-4xl font-semibold tracking-[-.045em] md:text-5xl">Manage posts</h2></div><button type="button" onClick={() => { resetDraft(); setAdminView("create"); }} className="button-primary shrink-0"><Plus size={17}/>New post</button></div>
+            {state.loading ? <LoaderCircle className="animate-spin text-blue"/> : posts.length === 0 ? <div className="rounded-[2rem] bg-white p-10 text-center text-black/40">No posts to manage.</div> : <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm">
+              {posts.map((post, index) => <div key={post.id} className={`flex flex-col gap-4 p-5 sm:flex-row sm:items-center ${index ? "border-t" : ""}`}>
+                {post.image_url ? <img src={post.image_url} alt="" className="h-20 w-full rounded-xl object-cover sm:w-28"/> : <div className="flex h-20 w-full items-center justify-center rounded-xl bg-mist text-black/20 sm:w-28"><BookOpen size={22}/></div>}
+                <div className="min-w-0 flex-1"><h3 className="line-clamp-2 font-semibold">{post.title}</h3><p className="mt-1 text-xs text-black/35">{friendlyDate(post.created_at)} · {(post.replies || []).length} comments</p></div>
+                <div className="flex gap-2"><button type="button" onClick={() => { setAdminView("view"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="button-secondary px-4 py-2 text-xs"><BookOpen size={14}/>View</button><button type="button" onClick={() => edit(post)} className="button-secondary px-4 py-2 text-xs"><Pencil size={14}/>Edit</button><button type="button" onClick={() => remove(post.id)} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-100"><Trash2 size={14}/>Delete</button></div>
+              </div>)}
+            </div>}
+          </>}
+
+          {adminView === "comments" && <>
+            <div className="mb-8"><p className="eyebrow">Conversations</p><h2 className="mt-3 text-4xl font-semibold tracking-[-.045em] md:text-5xl">Comments</h2></div>
+            <div className="rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
+              {commentState.error && <p className="mb-4 text-sm text-red-600">{commentState.error}</p>}
+              {!visitorReplies.length ? <p className="text-sm text-black/40">Visitor replies will appear here.</p> : <div className="divide-y">
+                {visitorReplies.map(({ post, reply }) => <div key={reply.id} className="py-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-blue">{post.title}</p>
+                  <div className="mt-2 flex items-baseline justify-between gap-3"><p className="text-sm font-semibold">{reply.name || "Anonymous"}</p><time className="text-[10px] text-black/30">{friendlyDate(reply.created_at)}</time></div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/60">{reply.message}</p>
+                  <div className="mt-3 flex gap-2"><button type="button" onClick={() => { setReplyingTo(replyingTo === reply.id ? null : reply.id); setAdminReply(""); }} className="inline-flex items-center gap-1.5 rounded-full bg-blue/10 px-3 py-2 text-xs font-semibold text-blue"><MessageCircle size={14}/>Reply</button><button type="button" disabled={commentState.busy === reply.id} onClick={() => removeVisitorReply(post.id, reply.id)} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-2 text-xs font-semibold text-red-600"><Trash2 size={14}/>Delete</button></div>
+                  {replyingTo === reply.id && <form onSubmit={(event) => answerVisitor(event, post.id, reply.id)} className="mt-3"><textarea required autoFocus maxLength="1000" rows="3" value={adminReply} onChange={(event) => setAdminReply(event.target.value)} className="post-input w-full resize-none text-sm"/><div className="mt-2 flex gap-2"><button className="button-primary px-4 py-2 text-xs"><Send size={14}/>Send</button><button type="button" onClick={() => setReplyingTo(null)} className="button-secondary px-4 py-2 text-xs">Cancel</button></div></form>}
+                </div>)}
+              </div>}
+            </div>
+          </>}
+        </div>
+      </section>
+    </div>
   </main>;
 }

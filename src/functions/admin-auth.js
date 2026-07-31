@@ -8,6 +8,7 @@ const headers = {
   "Content-Type": "application/json",
   "Cache-Control": "no-store",
 };
+const persistentSessionSeconds = 60 * 60 * 24 * 365 * 10;
 
 const response = (statusCode, data, extraHeaders = {}) => ({
   statusCode,
@@ -171,13 +172,13 @@ export async function handler(event) {
       const tokenHash = hashAdminToken(token);
       const [session] = await sql`
         INSERT INTO admin_sessions (email, token_hash, expires_at)
-        VALUES (${email}, ${tokenHash}, NOW() + INTERVAL '12 hours')
+        VALUES (${email}, ${tokenHash}, NOW() + INTERVAL '10 years')
         RETURNING expires_at
       `;
       return response(
         200,
         { ok: true, expiresAt: session.expires_at },
-        { "Set-Cookie": sessionCookie(event, token, 60 * 60 * 12) },
+        { "Set-Cookie": sessionCookie(event, token, persistentSessionSeconds) },
       );
     }
 

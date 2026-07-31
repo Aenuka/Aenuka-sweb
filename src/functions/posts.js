@@ -20,9 +20,18 @@ function cleanText(value, maxLength) {
 
 function cleanHtml(value) {
   return sanitizeHtml(String(value || "").slice(0, 60000), {
-    allowedTags: ["p", "br", "strong", "b", "em", "i", "h2", "h3", "table", "thead", "tbody", "tr", "th", "td", "ul", "ol", "li", "a"],
-    allowedAttributes: { a: ["href", "target", "rel"] },
+    allowedTags: ["p", "br", "hr", "strong", "b", "em", "i", "h2", "h3", "pre", "code", "iframe", "figure", "figcaption", "img", "table", "thead", "tbody", "tr", "th", "td", "ul", "ol", "li", "a"],
+    allowedAttributes: {
+      "*": ["data-align"],
+      a: ["href", "target", "rel"],
+      th: ["colspan", "rowspan"],
+      td: ["colspan", "rowspan"],
+      iframe: ["src", "title", "loading", "frameborder", "allow", "allowfullscreen", "referrerpolicy"],
+      img: ["src", "alt", "loading"],
+      figure: ["data-size"],
+    },
     allowedSchemes: ["http", "https", "mailto"],
+    allowedIframeHostnames: ["www.youtube.com", "www.youtube-nocookie.com"],
     transformTags: {
       a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }),
     },
