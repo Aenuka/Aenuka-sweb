@@ -192,13 +192,14 @@ function FullPost({ post, onBack, onReplyAdded }) {
     return () => window.cancelAnimationFrame(firstFrame);
   }, [post.id]);
 
-  return <main className="page-enter min-h-screen bg-white pt-14">
+  return <>
+    <div className="fixed bottom-5 left-5 z-[80] md:bottom-8 md:left-8">
+      <button type="button" onClick={onBack} className="button-secondary border-black/10 bg-white/95 px-4 py-2.5 text-sm shadow-xl shadow-black/15 backdrop-blur-xl hover:bg-white">
+        <ChevronDown className="rotate-90" size={16}/> All posts
+      </button>
+    </div>
+    <main className="page-enter min-h-screen bg-white pt-14">
     <article>
-      <div className="fixed bottom-5 left-5 z-50 md:bottom-8 md:left-8">
-        <button type="button" onClick={onBack} className="button-secondary border-black/10 bg-white px-4 py-2.5 text-sm shadow-xl shadow-black/15 backdrop-blur-xl hover:bg-white">
-          <ChevronDown className="rotate-90" size={16}/> All posts
-        </button>
-      </div>
       {post.image_url && <div className="shell max-w-[1280px] pt-8 md:pt-12"><img src={post.image_url} alt="" onLoad={positionAtTitle} className="max-h-[680px] w-full rounded-[1.5rem] bg-mist object-cover md:rounded-[2rem]"/></div>}
       <header ref={titleRef} className="shell max-w-[1280px] scroll-mt-20 pb-8 pt-12 md:pb-12 md:pt-16">
         <time className="text-xs font-medium uppercase tracking-[.12em] text-black/35">{friendlyDate(post.created_at)}</time>
@@ -209,7 +210,8 @@ function FullPost({ post, onBack, onReplyAdded }) {
         <CommentsSection post={post} onAdded={onReplyAdded}/>
       </div>
     </article>
-  </main>;
+    </main>
+  </>;
 }
 
 function CommentsSection({ post, onAdded }) {
@@ -973,7 +975,7 @@ export function AdminPosts() {
   const [state, setState] = useState({ loading: true, saving: false, uploading: false, message: "", error: "" });
   const [replyingTo, setReplyingTo] = useState(null);
   const [adminReply, setAdminReply] = useState("");
-  const [commentState, setCommentState] = useState({ busy: null, error: "" });
+  const [commentState, setCommentState] = useState({ busy: null, error: "", message: "" });
 
   useEffect(() => {
     fetch(authEndpoint, {
@@ -1086,12 +1088,13 @@ export function AdminPosts() {
   async function answerVisitor(event, postId, parentReplyId) {
     event.preventDefault();
     if (!adminReply.trim()) return;
-    setCommentState({ busy: parentReplyId, error: "" });
+    const message = adminReply.trim();
+    setCommentState({ busy: parentReplyId, error: "", message: "" });
     try {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ action: "adminReply", parentReplyId, message: adminReply }),
+        body: JSON.stringify({ action: "adminReply", parentReplyId, message }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not send your reply.");
@@ -1100,9 +1103,9 @@ export function AdminPosts() {
       ));
       setReplyingTo(null);
       setAdminReply("");
-      setCommentState({ busy: null, error: "" });
+      setCommentState({ busy: null, error: "", message: "Reply sent successfully." });
     } catch (error) {
-      setCommentState({ busy: null, error: error.message });
+      setCommentState({ busy: null, error: error.message, message: "" });
     }
   }
 
@@ -1229,14 +1232,19 @@ export function AdminPosts() {
           {adminView === "comments" && <>
             <div className="mb-8"><p className="eyebrow">Conversations</p><h2 className="mt-3 text-4xl font-semibold tracking-[-.045em] md:text-5xl">Comments</h2></div>
             <div className="rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
-              {commentState.error && <p className="mb-4 text-sm text-red-600">{commentState.error}</p>}
+              {commentState.error && <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{commentState.error}</p>}
+              {commentState.message && <p className="mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">{commentState.message}</p>}
               {!visitorReplies.length ? <p className="text-sm text-black/40">Visitor replies will appear here.</p> : <div className="divide-y">
                 {visitorReplies.map(({ post, reply }) => <div key={reply.id} className="py-5">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-blue">{post.title}</p>
                   <div className="mt-2 flex items-baseline justify-between gap-3"><p className="text-sm font-semibold">{reply.name || "Anonymous"}</p><time className="text-[10px] text-black/30">{friendlyDate(reply.created_at)}</time></div>
                   <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/60">{reply.message}</p>
+                  {(post.replies || []).filter((child) => child.parent_reply_id === reply.id && child.is_admin).map((child) => <div key={child.id} className="mt-3 rounded-xl bg-blue/[.055] px-4 py-3">
+                    <div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-blue">Your reply</span><time className="text-[10px] text-black/30">{friendlyDate(child.created_at)}</time></div>
+                    <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-black/60">{child.message}</p>
+                  </div>)}
                   <div className="mt-3 flex gap-2"><button type="button" onClick={() => { setReplyingTo(replyingTo === reply.id ? null : reply.id); setAdminReply(""); }} className="inline-flex items-center gap-1.5 rounded-full bg-blue/10 px-3 py-2 text-xs font-semibold text-blue"><MessageCircle size={14}/>Reply</button><button type="button" disabled={commentState.busy === reply.id} onClick={() => removeVisitorReply(post.id, reply.id)} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-2 text-xs font-semibold text-red-600"><Trash2 size={14}/>Delete</button></div>
-                  {replyingTo === reply.id && <form onSubmit={(event) => answerVisitor(event, post.id, reply.id)} className="mt-3"><textarea required autoFocus maxLength="1000" rows="3" value={adminReply} onChange={(event) => setAdminReply(event.target.value)} className="post-input w-full resize-none text-sm"/><div className="mt-2 flex gap-2"><button className="button-primary px-4 py-2 text-xs"><Send size={14}/>Send</button><button type="button" onClick={() => setReplyingTo(null)} className="button-secondary px-4 py-2 text-xs">Cancel</button></div></form>}
+                  {replyingTo === reply.id && <form onSubmit={(event) => answerVisitor(event, post.id, reply.id)} className="mt-3"><textarea required autoFocus maxLength="1000" rows="3" value={adminReply} onChange={(event) => setAdminReply(event.target.value)} className="post-input w-full resize-none text-sm" placeholder={`Reply to ${reply.name || "Anonymous"}…`}/><div className="mt-2 flex gap-2"><button type="submit" disabled={commentState.busy === reply.id || !adminReply.trim()} className="button-primary px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-45">{commentState.busy === reply.id ? <LoaderCircle className="animate-spin" size={14}/> : <Send size={14}/>} {commentState.busy === reply.id ? "Sending…" : "Send"}</button><button type="button" disabled={commentState.busy === reply.id} onClick={() => { setReplyingTo(null); setAdminReply(""); }} className="button-secondary px-4 py-2 text-xs disabled:opacity-50">Cancel</button></div></form>}
                 </div>)}
               </div>}
             </div>
