@@ -54,12 +54,15 @@ export const seo = {
       "Aenuka is available for software engineering internships, collaborations, and conversations about web applications, backend systems, distributed systems, and digital product development.",
   },
   "/posts": {
-    title: "Posts | Aenuka Buddhakorala",
-    description: "Read notes, ideas, and updates from Aenuka Buddhakorala and join the conversation.",
-    keywords: "Aenuka Buddhakorala posts, software engineering notes, updates",
+    title: "Software Engineering Posts | Aenuka Buddhakorala",
+    description:
+      "Read software engineering notes, project updates, technical ideas, and development insights from Aenuka Buddhakorala.",
+    keywords:
+      "Aenuka Buddhakorala posts, software engineering blog, programming notes, web development insights, project updates",
     imageAlt: "Posts by Aenuka Buddhakorala",
-    heading: "Posts by Aenuka Buddhakorala",
-    summary: "Notes, ideas, progress, and updates from Aenuka Buddhakorala.",
+    heading: "Software engineering posts by Aenuka Buddhakorala",
+    summary:
+      "Software engineering notes, technical ideas, project progress, and development updates from Aenuka Buddhakorala.",
   },
 };
 
@@ -151,6 +154,22 @@ function getStructuredData(path, page) {
   if (path === "/about") {
     graph[0]["@type"] = "ProfilePage";
     graph[0].mainEntity = { "@id": personId };
+  }
+
+  if (path === "/posts") {
+    const blogId = `${canonicalUrl}#blog`;
+    graph[0]["@type"] = "CollectionPage";
+    graph[0].mainEntity = { "@id": blogId };
+    graph.push({
+      "@type": "Blog",
+      "@id": blogId,
+      url: canonicalUrl,
+      name: page.heading,
+      description: page.description,
+      author: { "@id": personId },
+      publisher: { "@id": personId },
+      inLanguage: "en",
+    });
   }
 
   return { "@context": "https://schema.org", "@graph": graph };
