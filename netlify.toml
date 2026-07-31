@@ -5,7 +5,6 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["sanitize-html", "htmlparser2"]
 
 [dev]
   command = "npm run dev"
