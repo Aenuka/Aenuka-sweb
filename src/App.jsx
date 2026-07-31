@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, NavLink, Link, useLocation } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Github, Linkedin, Instagram, Menu, X, Code2, Server, Database, Boxes, Palette, CheckCircle2, Send } from "lucide-react";
-import { getSeo } from "./seo";
+import { ArrowRight, ArrowUpRight, Github, Linkedin, Instagram, Menu, X, Code2, Server, Database, Boxes, Palette, CheckCircle2, Send, FileQuestion } from "lucide-react";
+import { getSeo, normalizePath } from "./seo";
+import { AdminLogin, AdminPosts, Posts } from "./Posts";
 
-const nav = [["About", "/about"], ["Skills", "/skills"], ["Projects", "/projects"], ["Contact", "/contact"]];
+const nav = [["About", "/about"], ["Skills", "/skills"], ["Projects", "/projects"], ["Posts", "/posts"], ["Contact", "/contact"]];
+const validPaths = new Set(["/", "/about", "/skills", "/projects", "/posts", "/contact", "/admin", "/admin/dashboard"]);
 
 function setMeta(selector, attribute, value) {
   let element = document.head.querySelector(selector);
@@ -19,8 +21,10 @@ function setMeta(selector, attribute, value) {
 function Seo() {
   const { pathname } = useLocation();
   useEffect(() => {
-    const page = getSeo(pathname);
-    document.title = page.title;
+    const path = normalizePath(pathname);
+    const isNotFound = !validPaths.has(path);
+    const page = getSeo(path);
+    document.title = isNotFound ? "Page Not Found | Aenuka" : page.title;
     setMeta('meta[name="description"]', "content", page.description);
     setMeta('meta[name="keywords"]', "content", page.keywords);
     setMeta('meta[property="og:title"]', "content", page.title);
@@ -32,6 +36,7 @@ function Seo() {
     setMeta('meta[name="twitter:description"]', "content", page.description);
     setMeta('meta[name="twitter:image"]', "content", page.image);
     setMeta('meta[name="twitter:image:alt"]', "content", page.imageAlt);
+    setMeta('meta[name="robots"]', "content", path.startsWith("/admin") || isNotFound ? "noindex, nofollow" : "index, follow");
     let structuredData = document.head.querySelector('script[data-page-schema]');
     if (!structuredData) {
       structuredData = document.createElement("script");
@@ -175,8 +180,22 @@ function Contact() {
   </section></main>
 }
 
+function NotFound() {
+  return <main className="page-enter flex min-h-[calc(100vh-3.5rem)] items-center bg-mist px-5 pt-14">
+    <section className="mx-auto max-w-2xl py-20 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.35rem] bg-white text-blue shadow-sm">
+        <FileQuestion size={29} strokeWidth={1.5}/>
+      </div>
+      <p className="eyebrow mt-8">Error 404</p>
+      <h1 className="mt-4 text-[clamp(2.7rem,7vw,5.5rem)] font-semibold leading-[.98] tracking-[-.055em]">Page not found.</h1>
+      <p className="mx-auto mt-6 max-w-md text-lg leading-relaxed text-black/50">The page you’re looking for may have moved, or the address might be incorrect.</p>
+      <Link to="/" className="button-primary mt-9">Go to homepage <ArrowRight size={16}/></Link>
+    </section>
+  </main>;
+}
+
 function ScrollTop() { const {pathname}=useLocation(); useEffect(()=>window.scrollTo(0,0),[pathname]); return null; }
 export default function App() {
   const location = useLocation();
-  return <><Seo/><ScrollTop/><Header/><Routes location={location} key={location.pathname}><Route path="/" element={<Home/>}/><Route path="/about" element={<About/>}/><Route path="/skills" element={<Skills/>}/><Route path="/projects" element={<Projects/>}/><Route path="/contact" element={<Contact/>}/><Route path="*" element={<Home/>}/></Routes><Footer/></>;
+  return <><Seo/><ScrollTop/><Header/><Routes location={location} key={location.pathname}><Route path="/" element={<Home/>}/><Route path="/about" element={<About/>}/><Route path="/skills" element={<Skills/>}/><Route path="/projects" element={<Projects/>}/><Route path="/posts" element={<Posts/>}/><Route path="/admin" element={<AdminLogin/>}/><Route path="/admin/dashboard" element={<AdminPosts/>}/><Route path="/contact" element={<Contact/>}/><Route path="*" element={<NotFound/>}/></Routes><Footer/></>;
 }

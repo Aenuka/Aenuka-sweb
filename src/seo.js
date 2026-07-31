@@ -53,6 +53,33 @@ export const seo = {
     summary:
       "Aenuka is available for software engineering internships, collaborations, and conversations about web applications, backend systems, distributed systems, and digital product development.",
   },
+  "/posts": {
+    title: "Posts | Aenuka Buddhakorala",
+    description: "Read notes, ideas, and updates from Aenuka Buddhakorala and join the conversation.",
+    keywords: "Aenuka Buddhakorala posts, software engineering notes, updates",
+    imageAlt: "Posts by Aenuka Buddhakorala",
+    heading: "Posts by Aenuka Buddhakorala",
+    summary: "Notes, ideas, progress, and updates from Aenuka Buddhakorala.",
+  },
+};
+
+const privateSeo = {
+  "/admin": {
+    title: "Manage Posts | Aenuka",
+    description: "Private post management dashboard.",
+    keywords: "",
+    imageAlt: "",
+    heading: "Manage posts",
+    summary: "",
+  },
+  "/admin/dashboard": {
+    title: "Admin Dashboard | Aenuka",
+    description: "Private post management dashboard.",
+    keywords: "",
+    imageAlt: "",
+    heading: "Admin dashboard",
+    summary: "",
+  },
 };
 
 export function normalizePath(pathname) {
@@ -62,7 +89,7 @@ export function normalizePath(pathname) {
 
 export function getSeo(pathname) {
   const path = normalizePath(pathname);
-  const page = seo[path] || seo["/"];
+  const page = privateSeo[path] || seo[path] || seo["/"];
   return {
     ...page,
     path,

@@ -31,5 +31,17 @@ This project features a **fully functional contact form** that:
 - 🛡️ Validates and sanitizes user input
 - 📤 Optionally emails the admin or logs to console/server
 
-### API Endpoint Example
+## Posts and admin panel
 
+- Public feed: `/posts`
+- Unlisted admin login: `/admin`
+- Protected dashboard: `/admin/dashboard`
+- Local full-stack development: `npm run dev` (including local function routes)
+
+Copy `.env.example` to `.env` and configure `NEON_DB_URL` and
+the admin email, mail credentials, and `OTP_SECRET`. Admin access uses a
+single-use email code and a secure server-side session. Image uploads
+additionally need signed Cloudinary credentials (or an unsigned upload preset).
+The required database tables are created automatically on first use.
+
+### API Endpoint Example
