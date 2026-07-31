@@ -42,13 +42,13 @@ function sessionCookie(event, token, maxAge) {
 function otpEmail(code) {
   return {
     subject: `${code} is your Aenuka admin verification code`,
-    text: `Your Aenuka admin verification code is ${code}. It expires in 10 minutes. If you did not request this code, you can ignore this email.`,
+    text: `Your Aenuka admin verification code is ${code}. It expires in 15 minutes. If you requested more than one code, any unexpired code will work until you sign in. If you did not request this code, you can ignore this email.`,
     html: `
       <div style="background:#f5f5f7;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1d1d1f">
         <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:24px;padding:36px;text-align:center">
           <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#0071e3">Aenuka Admin</div>
           <h1 style="font-size:28px;letter-spacing:-.03em;margin:18px 0 8px">Verification code</h1>
-          <p style="color:#6e6e73;line-height:1.6;margin:0">Use this one-time code to sign in. It expires in 10 minutes.</p>
+          <p style="color:#6e6e73;line-height:1.6;margin:0">Use this one-time code to sign in. It expires in 15 minutes.</p>
           <div style="font-size:38px;font-weight:700;letter-spacing:.2em;margin:30px 0;color:#1d1d1f">${code}</div>
           <p style="font-size:12px;color:#86868b;line-height:1.5;margin:0">If you didn’t request this code, you can safely ignore this email.</p>
         </div>
@@ -94,21 +94,23 @@ export async function handler(event) {
         LIMIT 1
       `;
       if (recent.length) return response(429, { error: "A code was recently sent. Enter that code or wait one minute to request another.", canVerify: true });
-      const hourly = await sql`
+      const requestWindow = await sql`
         SELECT COUNT(*)::INTEGER AS count FROM admin_otp_codes
-        WHERE email=${email} AND created_at > NOW() - INTERVAL '1 hour'
+        WHERE email=${email} AND created_at > NOW() - INTERVAL '2 minutes'
       `;
-      if (hourly[0]?.count >= 5) return response(429, { error: "Too many codes requested. Please try again later." });
+      if (requestWindow[0]?.count >= 3) {
+        return response(
+          429,
+          { error: "Too many codes requested. Please wait two minutes and try again.", retryAfterSeconds: 120 },
+          { "Retry-After": "120" },
+        );
+      }
 
       const code = randomInt(100000, 1000000).toString();
       const codeHash = hashCode(email, code, otpSecret);
-      await sql`
-        UPDATE admin_otp_codes SET consumed_at=NOW()
-        WHERE email=${email} AND consumed_at IS NULL
-      `;
       const [record] = await sql`
         INSERT INTO admin_otp_codes (email, code_hash, requester_ip, expires_at)
-        VALUES (${email}, ${codeHash}, ${ip}, NOW() + INTERVAL '10 minutes')
+        VALUES (${email}, ${codeHash}, ${ip}, NOW() + INTERVAL '15 minutes')
         RETURNING id
       `;
 
@@ -138,17 +140,18 @@ export async function handler(event) {
         return response(401, { error: "Invalid or expired verification code." });
       }
 
-      const [record] = await sql`
+      const records = await sql`
         SELECT id, code_hash, attempts FROM admin_otp_codes
         WHERE email=${email} AND consumed_at IS NULL AND expires_at > NOW() AND attempts < 5
         ORDER BY created_at DESC
-        LIMIT 1
+        LIMIT 5
       `;
       const providedHash = hashCode(email, code, otpSecret);
-      if (!record || !sameHash(record.code_hash, providedHash)) {
-        if (record) await sql`
+      const record = records.find((candidate) => sameHash(candidate.code_hash, providedHash));
+      if (!record) {
+        if (records.length) await sql`
           UPDATE admin_otp_codes SET attempts=LEAST(attempts + 1, 5)
-          WHERE id=${record.id} AND consumed_at IS NULL
+          WHERE email=${email} AND consumed_at IS NULL AND expires_at > NOW() AND attempts < 5
         `;
         return response(401, { error: "Invalid or expired verification code." });
       }
@@ -159,6 +162,10 @@ export async function handler(event) {
         RETURNING id
       `;
       if (!consumed.length) return response(401, { error: "Invalid or expired verification code." });
+      await sql`
+        UPDATE admin_otp_codes SET consumed_at=NOW()
+        WHERE email=${email} AND consumed_at IS NULL
+      `;
       await sql`DELETE FROM admin_sessions WHERE expires_at <= NOW()`;
       const token = randomBytes(32).toString("base64url");
       const tokenHash = hashAdminToken(token);

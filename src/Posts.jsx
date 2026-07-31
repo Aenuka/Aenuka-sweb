@@ -154,7 +154,7 @@ export function AdminLogin() {
         throw new Error(data.error || "Could not send the verification code.");
       }
       setStep("code");
-      setState({ loading: false, error: "", message: "A 6-digit code was sent to your email." });
+      setState({ loading: false, error: "", message: "A 6-digit code was sent. It remains valid for 15 minutes." });
     } catch (error) {
       setState({ loading: false, error: error.message, message: "" });
     }
