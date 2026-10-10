@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight, Github, Linkedin, Code2, Server, Database, Bo
 import { getSeo, normalizePath } from "./seo";
 import { AdminLogin, AdminPosts, Posts } from "./Posts";
 import PortfolioWorkspace, { WorkspaceWelcome } from "./PortfolioWorkspace";
+import { projects } from "./projects";
 
 const validPaths = new Set(["/", "/about", "/skills", "/projects", "/posts", "/contact", "/admin", "/admin/dashboard"]);
 
@@ -99,13 +100,7 @@ function Skills() {
   <section className="shell grid gap-5 pb-24 md:grid-cols-2">{skillGroups.map(({icon:Icon,title,text,skills},index) => <article key={title} data-reveal className="skill-card card bg-white p-8 md:p-11"><div className="flex items-center justify-between"><div className="skill-icon"><Icon size={30} strokeWidth={1.5}/></div><span className="text-sm text-black/35">0{index+1}</span></div><h2 className="mt-14 text-3xl font-semibold tracking-tight">{title}</h2><p className="mt-3 max-w-md leading-relaxed text-black/50">{text}</p><div className="work-tags mt-8">{skills.map(x=><span key={x}>{x}</span>)}</div></article>)}</section><ContactInvitation/></main>
 }
 
-const projects = [
-  {n:"01", title:"Healthcare Microservices Platform", role:"Group Lead · Ongoing", desc:"A scalable healthcare platform built around Spring Boot microservices, containerized with Docker and orchestrated using Kubernetes.", tags:["Spring Boot","Docker","Kubernetes"], link:"https://github.com/Aenuka/SLIIT-SE3020-SE-120-Healthcare-Microservices-Platform"},
-  {n:"02", title:"Quizora", role:"Group Lead", desc:"An online exam management system shaped through industry research, agile delivery, and flexible exam workflows.", tags:["Agile","Jira","Full Stack"], link:"https://github.com/Aenuka/Quizora"},
-  {n:"03", title:"Cey Harvest", role:"Semi-finalist · IDEALIZE 2025", desc:"An agriculture-focused platform designed to improve farming logistics and information management.", tags:["Spring Boot","Team Project"], link:"https://github.com/damithch/CeyHarvest"},
-  {n:"04", title:"Animal Hospital Inventory", role:"Full-stack contributor", desc:"A MERN inventory system with automated reordering and supplier notification workflows.", tags:["MERN","MVC"], link:"https://github.com/kaveeshapasan2002/City_Pet_AHMS"},
-  {n:"05", title:"Cypress Test Suite", role:"Group Lead", desc:"An automation project covering fixtures, assertions, reporting, API mocking, and reliable testing practices.", tags:["Cypress","QA Automation"], link:"https://github.com/Aenuka/CypressTestRepo"},
-];
+
 function Projects() {
   return <main className="page-enter pt-14 bg-mist"><section className="shell page-intro"><p className="eyebrow">Selected work</p><h1 className="headline mt-6 max-w-5xl">From a spark of an idea.<br/><span className="gradient-text">To something useful.</span></h1><p className="page-intro-description">A collection of systems, experiences, and lessons learned along the way.</p></section>
   <section className="shell pb-24"><h2 className="sr-only">Project collection</h2><div className="work-grid projects-grid">{projects.map((project,index)=><WorkCard key={project.title} project={project} index={index}/>)}</div></section><ContactInvitation/></main>

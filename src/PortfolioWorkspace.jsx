@@ -1,7 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Braces, Check, ChevronDown, ChevronRight, Code2, Command, Database, FileCode2, FileJson2, FileText, Folder, GitBranch, Layers3, LoaderCircle, Menu, Play, Search, Server, Terminal, X } from "lucide-react";
+import { ArrowRight, Braces, Check, ChevronDown, ChevronRight, Code2, Command, Database, FileCode2, FileJson2, FileText, Folder, GitBranch, Layers3, LoaderCircle, Menu, Play, Search, Server, Settings, Terminal, X } from "lucide-react";
 import "./workspace.css";
+import GitRepositories from "./GitRepositories";
+import WorkspaceSettings from "./WorkspaceSettings";
+import WorkspaceBoot from "./WorkspaceBoot";
 
 const workspaceFiles = [
   { path: "/", name: "Welcome.md", icon: FileText, language: "Markdown", label: "Welcome", description: "The person behind the code.", source: '# Aenuka Buddhakorala\n\nSoftware engineer. Builder. Always curious.\n\nIntern Backend Engineer at Arimac Digital.\nSoftware Engineering undergraduate at SLIIT.\nColombo, Sri Lanka.\n\n## Explore the workspace\n\nopen projects  →  Things I have built\nopen skills    →  My engineering toolkit\nopen about     →  The story so far\nopen posts     →  Notes and updates\nopen contact   →  Start a conversation' },
@@ -31,12 +34,21 @@ export default function PortfolioWorkspace({ children }) {
   const navigate = useNavigate();
   const current = workspaceFiles.find(file => file.path===pathname) || { ...workspaceFiles[0], name: pathname.startsWith("/admin") ? "Admin.secure" : "NotFound.md", path: pathname, label: "Page" };
   const [tabs, setTabs] = useState(["/"]);
+  const [booting, setBooting] = useState(true);
+  const [bootStage, setBootStage] = useState(0);
   const [source, setSource] = useState(false);
   const [explorerOpen, setExplorerOpen] = useState(false);
-  const [explorerCollapsed, setExplorerCollapsed] = useState(true);
+  const [explorerCollapsed, setExplorerCollapsed] = useState(false);
   const [folderOpen, setFolderOpen] = useState(true);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem("aenuka-color-theme")==="light" ? "light" : "dark"; }
+    catch { return "dark"; }
+  });
+  const [repositoryOpen, setRepositoryOpen] = useState(false);
+  const [repositoryPosition, setRepositoryPosition] = useState({ left: 12, top: 54 });
   const [search, setSearch] = useState("");
   const [command, setCommand] = useState("");
   const [logs, setLogs] = useState([{ text:"Workspace ready. Type help to explore.", kind:"muted" }]);
@@ -60,8 +72,24 @@ export default function PortfolioWorkspace({ children }) {
   const previousFile = workspaceFiles[flowIndex-1];
 
   useEffect(() => {
+    let cancelled=false;
+    const timers=[];
+    const delay=milliseconds=>new Promise(resolve=>timers.push(window.setTimeout(resolve,milliseconds)));
+    timers.push(window.setTimeout(()=>setBootStage(1),400));
+    timers.push(window.setTimeout(()=>setBootStage(2),850));
+    Promise.all([delay(3000),Promise.race([document.fonts?.ready || Promise.resolve(),delay(2600)])]).then(()=>{
+      if(cancelled) return;
+      setBootStage(3);
+      timers.push(window.setTimeout(()=>setBooting(false),250));
+    });
+    return ()=>{cancelled=true;timers.forEach(timer=>window.clearTimeout(timer));};
+  }, []);
+  useEffect(() => {
     document.documentElement.dataset.motion = "running";
   }, []);
+  useEffect(() => {
+    try { localStorage.setItem("aenuka-color-theme",theme); } catch { /* Theme still works when storage is unavailable. */ }
+  }, [theme]);
   useLayoutEffect(() => {
     const editor=editorRef.current;
     editor?.scrollTo({top:flowScrollEnd.current ? editor.scrollHeight : 0,behavior:"instant"});
@@ -75,6 +103,8 @@ export default function PortfolioWorkspace({ children }) {
     setRunning(false);
     setTabs(items => items.includes(pathname) ? items : [...items,pathname]);
     setExplorerOpen(false);
+    setRepositoryOpen(false);
+    setSettingsOpen(false);
     setSource(false);
     if (previousPath.current !== pathname) {
       previousPath.current = pathname;
@@ -88,7 +118,7 @@ export default function PortfolioWorkspace({ children }) {
   }, [paletteOpen]);
   useEffect(() => {
     const handle = event => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase()==="k") { event.preventDefault(); setPaletteOpen(value=>!value); setSearch(""); }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase()==="k") { event.preventDefault(); setRepositoryOpen(false); setSettingsOpen(false); setPaletteOpen(value=>!value); setSearch(""); }
       if (event.key==="Escape") { setPaletteOpen(false); setExplorerOpen(false); }
     };
     window.addEventListener("keydown",handle);
@@ -97,7 +127,7 @@ export default function PortfolioWorkspace({ children }) {
   useEffect(()=>()=>runTimers.current.forEach(timer=>window.clearTimeout(timer)),[]);
   useEffect(() => {
     const editor=editorRef.current;
-    if (!editor || source || paletteOpen || running || flowIndex<0) return;
+    if (!editor || booting || source || paletteOpen || repositoryOpen || settingsOpen || running || flowIndex<0) return;
     let advanceTimer;
     let touchStart;
     function innerArea(target) {
@@ -155,8 +185,17 @@ export default function PortfolioWorkspace({ children }) {
       editor.removeEventListener("touchstart",startTouch);
       editor.removeEventListener("touchmove",moveTouch);
     };
-  }, [pathname,source,paletteOpen,running,flowIndex,nextFile,previousFile,navigate]);
+  }, [pathname,booting,source,paletteOpen,repositoryOpen,settingsOpen,running,flowIndex,nextFile,previousFile,navigate]);
 
+  function openRepositories(event, fromRail=false) {
+    const rect=event.currentTarget.getBoundingClientRect();
+    const width=Math.min(440,window.innerWidth-24);
+    setRepositoryPosition({
+      left:Math.max(12,Math.min(fromRail ? rect.right+8 : rect.left,window.innerWidth-width-12)),
+      top:Math.max(12,Math.min(fromRail ? rect.top : rect.bottom+7,window.innerHeight-240))
+    });
+    setRepositoryOpen(true);
+  }
   function openFile(path) { setPaletteOpen(false); setSearch(""); navigate(path); }
   function toggleExplorer() {
     if (window.matchMedia("(max-width: 900px)").matches) setExplorerOpen(value=>!value);
@@ -209,13 +248,15 @@ export default function PortfolioWorkspace({ children }) {
     }
   }
 
-  return <div className={`portfolio-workspace ${terminalOpen ? "terminal-is-open" : ""} ${running ? "workspace-is-running" : ""} ${explorerCollapsed ? "explorer-is-collapsed" : ""}`}>
-    <header className="workspace-topbar"><div className="workspace-window-controls" aria-hidden="true"><i/><i/><i/></div><button type="button" className="workspace-mobile-menu workspace-icon-button" aria-label={explorerOpen ? "Close project explorer" : "Open project explorer"} aria-expanded={explorerOpen} aria-controls="portfolio-explorer" onClick={()=>setExplorerOpen(!explorerOpen)}>{explorerOpen ? <X size={19}/> : <Menu size={19}/>}</button><Link to="/" className="workspace-brand"><img src="/rect59R.png" alt=""/><span>aenuka<span className="workspace-brand-suffix">-portfolio</span></span><ChevronDown size={12}/></Link><span className="workspace-top-branch"><GitBranch size={13}/> main</span><button type="button" className="workspace-search" onClick={()=>{setSearch("");setPaletteOpen(true);}}><Search size={13}/><span>Search files…</span><kbd>⌘ K</kbd></button><div className="workspace-top-actions"><button type="button" className="workspace-run-button" onClick={runPortfolio} disabled={running}><Play size={14}/><span>{running ? "Running…" : "Run portfolio"}</span></button></div></header>
-    <div className="workspace-body"><nav className="workspace-rail" aria-label="Workspace tools"><button type="button" className="rail-selected" title="Project explorer" aria-label="Toggle project explorer" onClick={toggleExplorer}><Folder size={19}/></button><button type="button" title="Open projects" aria-label="Open projects" onClick={()=>openFile("/projects")}><Layers3 size={19}/></button><a href="https://github.com/Aenuka" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile (opens in a new tab)" title="GitHub"><GitBranch size={18}/></a>{terminalOpen&&<button type="button" className="workspace-rail-bottom" aria-label="Close terminal" title="Close terminal" onClick={()=>setTerminalOpen(false)}><Terminal size={19}/></button>}</nav>
+  return <>{booting&&<WorkspaceBoot theme={theme} stage={bootStage}/>}<div inert={booting ? "" : undefined} aria-hidden={booting ? true : undefined} data-theme={theme} className={`portfolio-workspace ${terminalOpen ? "terminal-is-open" : ""} ${running ? "workspace-is-running" : ""} ${explorerCollapsed ? "explorer-is-collapsed" : ""}`}>
+    <header className="workspace-topbar"><div className="workspace-window-controls" aria-hidden="true"><i/><i/><i/></div><button type="button" className="workspace-mobile-menu workspace-icon-button" aria-label={explorerOpen ? "Close project explorer" : "Open project explorer"} aria-expanded={explorerOpen} aria-controls="portfolio-explorer" onClick={()=>setExplorerOpen(!explorerOpen)}>{explorerOpen ? <X size={19}/> : <Menu size={19}/>}</button><Link to="/" className="workspace-brand"><img src={theme==="dark" ? "/rectL26N.png" : "/rect59R.png"} alt=""/><span>aenuka<span className="workspace-brand-suffix">-portfolio</span></span><ChevronDown size={12}/></Link><button type="button" className="workspace-top-branch" onClick={openRepositories} aria-label="Open GitHub project repositories" aria-haspopup="dialog" aria-expanded={repositoryOpen} aria-controls="workspace-git-repositories"><GitBranch size={13}/><span>main</span><ChevronDown size={11}/></button><button type="button" className="workspace-search" onClick={()=>{setSearch("");setPaletteOpen(true);}}><Search size={13}/><span>Search files…</span><kbd>⌘ K</kbd></button><div className="workspace-top-actions"><button type="button" className="workspace-run-button" onClick={runPortfolio} disabled={running}><Play size={14}/><span>{running ? "Running…" : "Run portfolio"}</span></button><button type="button" className="workspace-icon-button workspace-settings-button" aria-label="Workspace settings" title="Color theme settings" aria-haspopup="dialog" aria-expanded={settingsOpen} aria-controls="workspace-settings" onClick={()=>setSettingsOpen(true)}><Settings size={17}/></button></div></header>
+    <div className="workspace-body"><nav className="workspace-rail" aria-label="Workspace tools"><button type="button" className="rail-selected" title="Project explorer" aria-label="Toggle project explorer" onClick={toggleExplorer}><Folder size={19}/></button><button type="button" title="Open projects" aria-label="Open projects" onClick={()=>openFile("/projects")}><Layers3 size={19}/></button><button type="button" aria-label="Open GitHub project repositories" title="Git repositories" aria-haspopup="dialog" aria-expanded={repositoryOpen} aria-controls="workspace-git-repositories" onClick={event=>openRepositories(event,true)}><GitBranch size={18}/></button>{terminalOpen&&<button type="button" className="workspace-rail-bottom" aria-label="Close terminal" title="Close terminal" onClick={()=>setTerminalOpen(false)}><Terminal size={19}/></button>}</nav>
       {explorerOpen&&<button type="button" className="explorer-backdrop" aria-label="Close project explorer" onClick={()=>setExplorerOpen(false)}/>}
       <aside id="portfolio-explorer" className={`workspace-explorer ${explorerOpen ? "explorer-is-open" : ""}`} aria-label="Portfolio project explorer"><div className="workspace-panel-title"><span>Project</span><ChevronDown size={12}/><button type="button" className="workspace-icon-button" aria-label="Find a file" onClick={()=>setPaletteOpen(true)}><Search size={13}/></button></div><button type="button" className="workspace-project-root" onClick={()=>setFolderOpen(!folderOpen)} aria-expanded={folderOpen}><span>{folderOpen ? <ChevronDown size={12}/> : <ChevronRight size={12}/>}</span><Folder size={14}/><strong>aenuka-portfolio</strong></button>{folderOpen&&<div className="workspace-tree"><p className="tree-folder-label"><ChevronDown size={11}/><Folder size={13}/> src / portfolio</p>{workspaceFiles.map(({path,name,icon:Icon})=><Link to={path} key={path} aria-current={pathname===path ? "page" : undefined} className="workspace-file-link"><Icon size={14}/><span>{name}</span>{pathname===path&&<span className="file-selected-label">open</span>}</Link>)}</div>}<div className="explorer-guide"><span className="explorer-guide-line"/><Code2 size={22}/><h2>Built with curiosity.</h2><p>Every file tells a story.<br/>Open one. See what’s inside.</p><button type="button" onClick={()=>{setSearch("");setPaletteOpen(true);}}>Find your next file <ArrowRight size={12}/></button></div><div className="explorer-bottom"><span>PORTFOLIO WORKSPACE</span><span>6 files · one developer</span></div></aside>
       <section className="workspace-center" aria-label="Portfolio editor"><div className="workspace-editor-tabs" aria-label="Open files">{tabs.map(path=>{const file=workspaceFiles.find(item=>item.path===path)||current;const Icon=file.icon;return <div key={path} className={`workspace-tab ${pathname===path ? "tab-is-active" : ""}`}><Link to={path} aria-current={pathname===path ? "page" : undefined}><Icon size={13}/><span>{file.name}</span></Link>{path!=="/"&&<button type="button" aria-label={`Close ${file.name}`} onClick={()=>closeFile(path)}><X size={11}/></button>}</div>;})}<button type="button" className="workspace-add-tab" aria-label="Open another file" onClick={()=>setPaletteOpen(true)}>+</button></div><div className="workspace-editor-toolbar"><span className="workspace-breadcrumb">portfolio <ChevronRight size={10}/> <span>{current.name}</span></span><div className="workspace-view-switch" aria-label="File view"><button type="button" aria-pressed={!source} onClick={()=>setSource(false)}>Preview</button><button type="button" aria-pressed={source} onClick={()=>setSource(true)}>Source</button></div></div>{running&&<div className="workspace-run-banner" data-motion-graphic><LoaderCircle size={15}/><span><strong>PortfolioApplication</strong><small>{["Preparing the workspace", "Connecting portfolio views", "Opening selected work"][runStage]}</small></span><div className="workspace-run-stages">{["Prepare", "Connect", "Open"].map((stage,index)=><span key={stage} className={index<=runStage ? "stage-is-active" : ""}><b>{index<runStage ? <Check size={10}/> : index+1}</b>{stage}</span>)}</div><div className="workspace-run-line"><i/></div></div>}<div className="workspace-editor-scroll" id="main-content" tabIndex={-1} ref={editorRef}>{source ? <FileSource file={current}/> : children}</div>{terminalOpen&&<section className="workspace-terminal" aria-label="Navigation terminal"><div className="workspace-terminal-heading"><span><Terminal size={13}/> Terminal</span><span className="terminal-session-name">portfolio <X size={9}/></span><div><span className="terminal-navigation-label">NAVIGATE YOUR WORKSPACE</span><button type="button" className="workspace-icon-button" aria-label="Close terminal" onClick={()=>setTerminalOpen(false)}><X size={12}/></button></div></div><div className="workspace-terminal-output" ref={terminalRef} role="log" aria-label="Terminal output" aria-live="polite">{logs.map((entry,index)=><p key={index} className={`workspace-log log-${entry.kind}`}>{entry.text}</p>)}</div><form className="workspace-terminal-command" onSubmit={submitCommand}><label htmlFor="workspace-command"><span>aenuka</span> <span>~/portfolio</span> <b>❯</b><span className="sr-only">Terminal navigation command</span></label><input id="workspace-command" ref={inputRef} autoComplete="off" autoCapitalize="off" spellCheck={false} value={command} onChange={event=>setCommand(event.target.value)} onKeyDown={terminalKeys} placeholder="Try open projects"/><button type="submit" aria-label="Execute navigation command"><ArrowRight size={13}/></button><div className="terminal-quick-commands"><button type="button" onClick={()=>{setCommand("help");inputRef.current?.focus();}}>help</button><button type="button" onClick={()=>openFile("/contact")}>open contact</button></div></form></section>}</section>
     </div><footer className="workspace-statusbar"><span><GitBranch size={11}/> main <span className="workspace-status-divider">/</span><Check size={11}/><span>{running ? "Building your next view…" : "Workspace ready"}</span></span><span><Terminal size={11}/><span>Terminal {terminalOpen ? "on" : "off"}</span></span><span>{current.language}<span className="workspace-status-divider">/</span> UTF-8 <span className="workspace-status-divider">/</span><span>Colombo, Sri Lanka</span></span></footer>
+    <WorkspaceSettings open={settingsOpen} onClose={()=>setSettingsOpen(false)} theme={theme} onThemeChange={setTheme}/>
+    <GitRepositories open={repositoryOpen} onClose={()=>setRepositoryOpen(false)} position={repositoryPosition}/>
     <dialog className="workspace-command-palette" ref={dialogRef} onClose={()=>setPaletteOpen(false)} onClick={event=>{if(event.target===event.currentTarget)setPaletteOpen(false);}} aria-label="Open a portfolio file"><div className="palette-search"><Search size={18}/><input ref={searchRef} aria-label="Search portfolio files" placeholder="Where would you like to go?" value={search} onChange={event=>setSearch(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&filteredFiles[0])openFile(filteredFiles[0].path);}}/><button type="button" aria-label="Close file search" onClick={()=>setPaletteOpen(false)}><kbd>esc</kbd></button></div><p className="palette-label">OPEN A FILE</p><div className="palette-results">{filteredFiles.map(({path,name,icon:Icon,description})=><button type="button" key={path} onClick={()=>openFile(path)}><Icon size={19}/><span><strong>{name}</strong><small>{description}</small></span><ArrowRight size={14}/></button>)}{!filteredFiles.length&&<p className="palette-empty">No matching files. Try projects, skills, or contact.</p>}</div><p className="palette-footer">Type to search · Enter opens the first match</p></dialog>
-  </div>;
+  </div></>;
 }

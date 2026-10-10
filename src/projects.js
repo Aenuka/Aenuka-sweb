@@ -1,0 +1,7 @@
+export const projects = [
+  {n:"01", title:"Healthcare Microservices Platform", role:"Group Lead · Ongoing", desc:"A scalable healthcare platform built around Spring Boot microservices, containerized with Docker and orchestrated using Kubernetes.", tags:["Spring Boot","Docker","Kubernetes"], link:"https://github.com/Aenuka/SLIIT-SE3020-SE-120-Healthcare-Microservices-Platform"},
+  {n:"02", title:"Quizora", role:"Group Lead", desc:"An online exam management system shaped through industry research, agile delivery, and flexible exam workflows.", tags:["Agile","Jira","Full Stack"], link:"https://github.com/Aenuka/Quizora"},
+  {n:"03", title:"Cey Harvest", role:"Semi-finalist · IDEALIZE 2025", desc:"An agriculture-focused platform designed to improve farming logistics and information management.", tags:["Spring Boot","Team Project"], link:"https://github.com/damithch/CeyHarvest"},
+  {n:"04", title:"Animal Hospital Inventory", role:"Full-stack contributor", desc:"A MERN inventory system with automated reordering and supplier notification workflows.", tags:["MERN","MVC"], link:"https://github.com/kaveeshapasan2002/City_Pet_AHMS"},
+  {n:"05", title:"Cypress Test Suite", role:"Group Lead", desc:"An automation project covering fixtures, assertions, reporting, API mocking, and reliable testing practices.", tags:["Cypress","QA Automation"], link:"https://github.com/Aenuka/CypressTestRepo"},
+];
