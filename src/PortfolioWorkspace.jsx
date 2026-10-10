@@ -38,15 +38,12 @@ export default function PortfolioWorkspace({ children }) {
   const [bootStage, setBootStage] = useState(0);
   const [source, setSource] = useState(false);
   const [explorerOpen, setExplorerOpen] = useState(false);
-  const [explorerCollapsed, setExplorerCollapsed] = useState(false);
+  const [explorerCollapsed, setExplorerCollapsed] = useState(true);
   const [folderOpen, setFolderOpen] = useState(true);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem("aenuka-color-theme")==="light" ? "light" : "dark"; }
-    catch { return "dark"; }
-  });
+  const [theme, setTheme] = useState("dark");
   const [repositoryOpen, setRepositoryOpen] = useState(false);
   const [repositoryPosition, setRepositoryPosition] = useState({ left: 12, top: 54 });
   const [search, setSearch] = useState("");
@@ -87,9 +84,6 @@ export default function PortfolioWorkspace({ children }) {
   useEffect(() => {
     document.documentElement.dataset.motion = "running";
   }, []);
-  useEffect(() => {
-    try { localStorage.setItem("aenuka-color-theme",theme); } catch { /* Theme still works when storage is unavailable. */ }
-  }, [theme]);
   useLayoutEffect(() => {
     const editor=editorRef.current;
     editor?.scrollTo({top:flowScrollEnd.current ? editor.scrollHeight : 0,behavior:"instant"});

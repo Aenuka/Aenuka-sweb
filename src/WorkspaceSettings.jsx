@@ -17,6 +17,6 @@ export default function WorkspaceSettings({ open, onClose, theme, onThemeChange 
         <span className="theme-option-label"><Icon size={14}/><strong>{label}</strong>{theme===value&&<Check size={13}/>}</span><small>{description}</small>
       </label>)}
     </div></fieldset>
-    <p className="settings-saved" role="status">{theme==="light" ? "Light" : "Dark"} theme · Saved for your next visit</p>
+    <p className="settings-saved" role="status">{theme==="light" ? "Light" : "Dark"} theme · Applied to this workspace</p>
   </dialog>;
 }
