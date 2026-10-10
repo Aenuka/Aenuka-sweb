@@ -183,7 +183,11 @@ function FullPost({ post, onBack, onReplyAdded }) {
   const titleRef = useRef(null);
   function positionAtTitle() {
     if (!titleRef.current) return;
-    window.scrollTo(0, Math.max(0, titleRef.current.offsetTop - 76));
+    const editor = document.querySelector(".workspace-editor-scroll");
+    if (editor) {
+      const top = titleRef.current.getBoundingClientRect().top - editor.getBoundingClientRect().top + editor.scrollTop - 20;
+      editor.scrollTo({ top: Math.max(0, top), behavior: "instant" });
+    } else window.scrollTo(0, Math.max(0, titleRef.current.offsetTop - 76));
   }
   useEffect(() => {
     const firstFrame = window.requestAnimationFrame(() => {
@@ -193,12 +197,12 @@ function FullPost({ post, onBack, onReplyAdded }) {
   }, [post.id]);
 
   return <>
-    <div className="fixed bottom-5 left-5 z-[80] md:bottom-8 md:left-8">
+    <div className="shell pb-2 pt-6">
       <button type="button" onClick={onBack} className="button-secondary border-black/10 bg-white/95 px-4 py-2.5 text-sm shadow-xl shadow-black/15 backdrop-blur-xl hover:bg-white">
         <ChevronDown className="rotate-90" size={16}/> All posts
       </button>
     </div>
-    <main className="page-enter min-h-screen bg-white pt-14">
+    <main className="page-enter notes-post-page min-h-screen bg-white pt-14">
     <article>
       {post.image_url && <div className="shell max-w-[1280px] pt-8 md:pt-12"><img src={post.image_url} alt="" onLoad={positionAtTitle} className="max-h-[680px] w-full rounded-[1.5rem] bg-mist object-cover md:rounded-[2rem]"/></div>}
       <header ref={titleRef} className="shell max-w-[1280px] scroll-mt-20 pb-8 pt-12 md:pb-12 md:pt-16">
@@ -246,6 +250,9 @@ export function Posts() {
   const [searchQuery, setSearchQuery] = useState("");
   const [state, setState] = useState({ loading: true, error: "" });
   useEffect(() => {
+    document.getElementById("main-content")?.scrollTo({ top: 0, behavior: "instant" });
+  }, [selectedPostId]);
+  useEffect(() => {
     getPosts().then((items) => {
       setPosts(items);
       setState({ loading: false, error: "" });
@@ -277,10 +284,10 @@ export function Posts() {
     }} onReplyAdded={(reply) => addReply(selectedPost.id, reply)}/>;
   }
 
-  return <main className="page-enter min-h-screen bg-mist pt-14">
-    <section className="shell py-20 text-center md:py-28">
+  return <main className="page-enter notes-page min-h-screen bg-mist pt-14">
+    <section className="shell page-intro text-center">
       <p className="eyebrow">Notes & updates</p>
-      <h1 className="headline mx-auto mt-5 max-w-4xl">Posts</h1>
+      <h1 className="headline mx-auto mt-5 max-w-4xl">A work in progress.<br/><span className="gradient-text">A thought worth sharing.</span></h1>
       <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-black/50">
         Ideas, progress, and things worth sharing. Join the conversation—your name is optional.
       </p>
