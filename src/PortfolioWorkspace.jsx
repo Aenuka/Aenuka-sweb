@@ -33,7 +33,7 @@ export default function PortfolioWorkspace({ children }) {
   const [tabs, setTabs] = useState(["/"]);
   const [source, setSource] = useState(false);
   const [explorerOpen, setExplorerOpen] = useState(false);
-  const [explorerCollapsed, setExplorerCollapsed] = useState(false);
+  const [explorerCollapsed, setExplorerCollapsed] = useState(true);
   const [folderOpen, setFolderOpen] = useState(true);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
